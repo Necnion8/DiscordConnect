@@ -16,6 +16,7 @@ updateCheck: true
 
 # Formats
 fromDiscordToMinecraftFormat: "§9[Discord§7({server_name})§9] §f<{name}({tag})> "
+fromDiscordToMinecraftReferencedFormat: "§9[Discord§7({server_name})§9] §f<{name}({tag})> ({referenced_name})"
 fromMinecraftToDiscordName: "Minecraft: ({server}) {displayName}"
 fromDiscordToDiscordName: "Discord({server_name}): {nickName}({tag})"
 

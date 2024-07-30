@@ -2,10 +2,13 @@ package work.novablog.mcplugin.discordconnect.util.discord;
 
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.WebhookClientBuilder;
+import club.minnced.discord.webhook.receive.ReadonlyMessage;
 import club.minnced.discord.webhook.send.WebhookEmbed;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.CompletableFuture;
 
 public class DiscordWebhookSender {
     private final WebhookClient client;
@@ -33,27 +36,47 @@ public class DiscordWebhookSender {
      * @param userName 送信者の名前
      * @param avatarUrl 送信者のアバターURL
      * @param message 送信するプレーンメッセージ
+     * @return 送信タスク
      */
-    public void sendMessage(@Nullable String userName, @Nullable String avatarUrl, @NotNull String message) {
+    public CompletableFuture<ReadonlyMessage> sendMessage(@Nullable String userName, @Nullable String avatarUrl, @NotNull String message) {
         WebhookMessageBuilder builder = new WebhookMessageBuilder();
         builder.setUsername(userName);
         builder.setAvatarUrl(avatarUrl);
         builder.setContent(message);
-        client.send(builder.build());
+        return client.send(builder.build());
+    }
+
+    /**
+     * Webhookでプレーンメッセージを送信します
+     * @param userName 送信者の名前
+     * @param avatarUrl 送信者のアバターURL
+     * @param message 送信するプレーンメッセージ
+     * @param referenceMessageId 返信先メッセージID
+     * @return 送信タスク
+     */
+    public CompletableFuture<ReadonlyMessage> sendMessage(@Nullable String userName, @Nullable String avatarUrl, @NotNull String message, long referenceMessageId) {
+        WebhookMessageBuilder builder = new WebhookMessageBuilder();
+        builder.setUsername(userName);
+        builder.setAvatarUrl(avatarUrl);
+        builder.setContent(message);
+//        builder.setReferenceMessageId(referenceMessageId);  // TODO: Discord仕様的に返信先メッセージを設定できない
+        return client.send(builder.build());
     }
 
     /**
      * Webhookで埋め込みメッセージを送信します
-     * @param userName 送信者の名前
-     * @param avatarUrl 送信者のアバターURL
+     *
+     * @param userName     送信者の名前
+     * @param avatarUrl    送信者のアバターURL
      * @param embedMessage 送信する埋め込みメッセージ
+     * @return 送信タスク
      */
-    public void sendMessage(@Nullable String userName, @Nullable String avatarUrl, @NotNull WebhookEmbed embedMessage) {
+    public @NotNull CompletableFuture<ReadonlyMessage> sendMessage(@Nullable String userName, @Nullable String avatarUrl, @NotNull WebhookEmbed embedMessage) {
         WebhookMessageBuilder builder = new WebhookMessageBuilder();
         builder.setUsername(userName);
         builder.setAvatarUrl(avatarUrl);
         builder.addEmbeds(embedMessage);
-        client.send(builder.build());
+        return client.send(builder.build());
     }
 
     /**

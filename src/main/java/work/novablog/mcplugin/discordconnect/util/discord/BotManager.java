@@ -48,6 +48,7 @@ public class BotManager implements EventListener {
      * @param playingGameName botのステータスに表示されるプレイ中のゲーム名
      * @param prefix コマンドのprefix
      * @param toMinecraftFormat DiscordのメッセージをBungeeCordに転送するときのフォーマット
+     * @param toMinecraftReferenceFormat Discordのメッセージ(返信付き)をBungeeCordに転送するときのフォーマット
      * @param fromDiscordToDiscordName Discordのメッセージを再送するときの名前欄のフォーマット
      * @param discordCommandExecutor discordのコマンドの解析や実行を行うインスタンス
      * @param enableConsoleChannel コンソールチャンネルを有効化するか否か
@@ -61,6 +62,7 @@ public class BotManager implements EventListener {
             @NotNull String playingGameName,
             @NotNull String prefix,
             @NotNull String toMinecraftFormat,
+            @NotNull String toMinecraftReferenceFormat,
             @NotNull String fromDiscordToDiscordName,
             @NotNull DiscordCommandExecutor discordCommandExecutor,
             @NotNull Boolean enableConsoleChannel,
@@ -73,7 +75,7 @@ public class BotManager implements EventListener {
                 .setAutoReconnect(true)
                 .build();
         bot.addEventListener(
-                new DiscordListener(prefix, toMinecraftFormat, fromDiscordToDiscordName, discordCommandExecutor, consoleChannelId, allowDispatchCommandFromConsoleChannel)
+                new DiscordListener(prefix, toMinecraftFormat, toMinecraftReferenceFormat, fromDiscordToDiscordName, discordCommandExecutor, consoleChannelId, allowDispatchCommandFromConsoleChannel)
         );
 
         this.chatChannelIds = chatChannelIds;

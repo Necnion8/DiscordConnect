@@ -7,9 +7,11 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
+import work.novablog.mcplugin.discordconnect.util.AuthorMessages;
 import work.novablog.mcplugin.discordconnect.util.ConvertUtil;
 
 public class ChatCasterListener implements Listener {
+    private final AuthorMessages authorMessages = DiscordConnect.getInstance().getAuthorMessages();
     private final String fromMinecraftToDiscordName;
 
     /**
@@ -44,6 +46,6 @@ public class ChatCasterListener implements Listener {
                 name,
                 avatarURL,
                 convertedMessage
-        ));
+        ).thenAccept(m -> authorMessages.put(event.getSender(), m.getId())));
     }
 }

@@ -14,6 +14,7 @@ import work.novablog.mcplugin.discordconnect.command.DiscordStandardCommand;
 import work.novablog.mcplugin.discordconnect.listener.BungeeListener;
 import work.novablog.mcplugin.discordconnect.listener.ChatCasterListener;
 import work.novablog.mcplugin.discordconnect.listener.LunaChatListener;
+import work.novablog.mcplugin.discordconnect.util.AuthorMessages;
 import work.novablog.mcplugin.discordconnect.util.ConfigManager;
 import work.novablog.mcplugin.discordconnect.util.discord.BotManager;
 import work.novablog.mcplugin.discordconnect.util.GithubAPI;
@@ -39,6 +40,9 @@ public final class DiscordConnect extends Plugin {
     private LunaChatAPI lunaChatAPI;
     private UUIDCacheData uuidCacheData;
     private LunaChatListener lunaChatListener;
+
+    private final AuthorMessages authorMessages = new AuthorMessages();
+
 
     /**
      * インスタンスを返します
@@ -79,6 +83,15 @@ public final class DiscordConnect extends Plugin {
      */
     public @Nullable LunaChatAPI getLunaChatAPI() {
         return lunaChatAPI;
+    }
+
+
+    /**
+     * AuthorMessagesを返します
+     * @return AuthorMessages
+     */
+    public @NotNull AuthorMessages getAuthorMessages() {
+        return authorMessages;
     }
 
     /**
@@ -148,6 +161,7 @@ public final class DiscordConnect extends Plugin {
                     configManager.botPlayingGameName,
                     configManager.botCommandPrefix,
                     configManager.fromDiscordToMinecraftFormat,
+                    configManager.fromDiscordToMinecraftReferencedFormat,
                     configManager.fromDiscordToDiscordName,
                     discordCommandExecutor,
                     configManager.isEnableConsoleChannel,
@@ -213,6 +227,8 @@ public final class DiscordConnect extends Plugin {
 
     @Override
     public void onDisable() {
+        authorMessages.clear();
+        AuthorMessages.clearCache();
         if(botManager != null) botManager.botShutdown(false);
         if(discordWebhookSenders != null) discordWebhookSenders.forEach(DiscordWebhookSender::shutdown);
     }

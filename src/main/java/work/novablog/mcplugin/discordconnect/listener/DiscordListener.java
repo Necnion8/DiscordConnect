@@ -2,6 +2,9 @@ package work.novablog.mcplugin.discordconnect.listener;
 
 import com.gmail.necnionch.myapp.markdownconverter.MarkComponent;
 import com.gmail.necnionch.myapp.markdownconverter.MarkdownConverter;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.md_5.bungee.api.ProxyServer;
@@ -13,18 +16,18 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
 import work.novablog.mcplugin.discordconnect.command.DiscordCommandExecutor;
+import work.novablog.mcplugin.discordconnect.util.AuthorMessages;
 import work.novablog.mcplugin.discordconnect.util.ConfigManager;
 import work.novablog.mcplugin.discordconnect.util.discord.BotManager;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class DiscordListener extends ListenerAdapter {
+    private final AuthorMessages authorMessages = DiscordConnect.getInstance().getAuthorMessages();
     private final String prefix;
     private final String toMinecraftFormat;
+    private final @NotNull String toMinecraftReferenceFormat;
     private final String fromDiscordToDiscordName;
     private final DiscordCommandExecutor discordCommandExecutor;
     private final Long consoleChannelId;
@@ -35,6 +38,7 @@ public class DiscordListener extends ListenerAdapter {
      *
      * @param prefix                   コマンドのprefix
      * @param toMinecraftFormat        DiscordのメッセージをBungeecordへ転送するときのフォーマット
+     * @param toMinecraftReferenceFormat Discordのメッセージ(返信付き)をBungeecordへ転送するときのフォーマット
      * @param fromDiscordToDiscordName Discordのメッセージを再送するときの名前欄のフォーマット
      * @param discordCommandExecutor   discordのコマンドの解析や実行を行うインスタンス
      * @param consoleChannelId         コンソールチャンネルのID
@@ -43,6 +47,7 @@ public class DiscordListener extends ListenerAdapter {
     public DiscordListener(
             @NotNull String prefix,
             @NotNull String toMinecraftFormat,
+            @NotNull String toMinecraftReferenceFormat,
             @NotNull String fromDiscordToDiscordName,
             @NotNull DiscordCommandExecutor discordCommandExecutor,
             @Nullable Long consoleChannelId,
@@ -50,6 +55,7 @@ public class DiscordListener extends ListenerAdapter {
     ) {
         this.prefix = prefix;
         this.toMinecraftFormat = toMinecraftFormat;
+        this.toMinecraftReferenceFormat = toMinecraftReferenceFormat;
         this.fromDiscordToDiscordName = fromDiscordToDiscordName;
         this.discordCommandExecutor = discordCommandExecutor;
         this.consoleChannelId = consoleChannelId;
@@ -96,12 +102,39 @@ public class DiscordListener extends ListenerAdapter {
             String nickname = Objects.requireNonNull(receivedMessage.getMember()).getNickname() == null ?
                     name : Objects.requireNonNull(receivedMessage.getMember()).getNickname();
 
-            String formattedForMinecraft = toMinecraftFormat
-                    .replace("{name}", receivedMessage.getAuthor().getName())
-                    .replace("{nickName}", name)
-                    .replace("{tag}", receivedMessage.getAuthor().getAsTag())
-                    .replace("{server_name}", receivedMessage.getGuild().getName())
-                    .replace("{channel_name}", receivedMessage.getChannel().getName());
+            Message referenced = receivedMessage.getMessage().getReferencedMessage();
+            String formattedForMinecraft;
+            if (referenced == null) {
+                formattedForMinecraft = toMinecraftFormat
+                        .replace("{name}", receivedMessage.getAuthor().getName())
+                        .replace("{nickName}", name)
+                        .replace("{tag}", receivedMessage.getAuthor().getAsTag())
+                        .replace("{server_name}", receivedMessage.getGuild().getName())
+                        .replace("{channel_name}", receivedMessage.getChannel().getName());
+            } else {
+                User referencedAuthor = referenced.getAuthor();
+                String referencedAuthorName, referencedAuthorNickName;
+
+                AuthorMessages.Sender referencedSender = authorMessages.getMessageSender(referenced.getIdLong());
+                if (referencedSender != null) {
+                    referencedAuthorName = referencedSender.getDisplayName();
+                    referencedAuthorNickName = referencedSender.getNickName();
+                } else {
+                    referencedAuthorName = referencedAuthor.getName();
+                    referencedAuthorNickName = Optional.ofNullable(receivedMessage.getGuild().getMember(referencedAuthor))
+                            .map(Member::getNickname)
+                            .orElse(referencedAuthorName);
+                }
+
+                formattedForMinecraft = toMinecraftReferenceFormat
+                        .replace("{name}", receivedMessage.getAuthor().getName())
+                        .replace("{nickName}", name)
+                        .replace("{tag}", receivedMessage.getAuthor().getAsTag())
+                        .replace("{referenced_name}", referencedAuthorName)
+                        .replace("{referenced_nickName}", referencedAuthorNickName)
+                        .replace("{server_name}", receivedMessage.getGuild().getName())
+                        .replace("{channel_name}", receivedMessage.getChannel().getName());
+            }
 
             //マイクラに送信
             if (!receivedMessage.getMessage().getContentRaw().equals("")) {
@@ -140,13 +173,23 @@ public class DiscordListener extends ListenerAdapter {
             String finalMessage = message + "\n" + sj;
             if (!finalMessage.equals("\n")) {
                 //空白でなければ送信
-                DiscordConnect.getInstance().getDiscordWebhookSenders().forEach(sender ->
+                DiscordConnect.getInstance().getDiscordWebhookSenders().forEach(sender -> {
+                    if (referenced == null) {
                         sender.sendMessage(
                                 nameField,
                                 receivedMessage.getAuthor().getAvatarUrl(),
                                 finalMessage
-                        )
-                );
+                        ).thenAccept(authorMessages.putOf(receivedMessage));
+
+                    } else {
+                        sender.sendMessage(
+                                nameField,
+                                receivedMessage.getAuthor().getAvatarUrl(),
+                                finalMessage,
+                                referenced.getIdLong()
+                        ).thenAccept(authorMessages.putOf(receivedMessage));
+                    }
+                });
             }
 
             //メッセージを削除

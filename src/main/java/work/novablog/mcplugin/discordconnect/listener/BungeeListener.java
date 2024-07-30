@@ -15,6 +15,7 @@ import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
+import work.novablog.mcplugin.discordconnect.util.AuthorMessages;
 import work.novablog.mcplugin.discordconnect.util.ConfigManager;
 import work.novablog.mcplugin.discordconnect.util.ConvertUtil;
 import work.novablog.mcplugin.discordconnect.util.discord.BotManager;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class BungeeListener implements Listener {
+    private final AuthorMessages authorMessages = DiscordConnect.getInstance().getAuthorMessages();
     private final String fromMinecraftToDiscordName;
     private final List<String> hiddenServers;
     private final String dummyServerName;
@@ -70,7 +72,7 @@ public class BungeeListener implements Listener {
                     name,
                     avatarURL,
                     convertedMessage
-            ));
+            ).thenAccept(m -> authorMessages.put(((ProxiedPlayer) event.getSender()), m.getId())));
         }
     }
 
@@ -107,7 +109,7 @@ public class BungeeListener implements Listener {
                 name,
                 avatarURL,
                 webhookEmbedBuilder.build()
-        ));
+        ).thenAccept(m -> authorMessages.put(e.getConnection().getUniqueId(), e.getConnection().getName(), m.getId())));
 
         if(DiscordConnect.getInstance().canBotBeUsed()) {
             assert DiscordConnect.getInstance().getBotManager() != null;
@@ -149,7 +151,7 @@ public class BungeeListener implements Listener {
                 name,
                 avatarURL,
                 webhookEmbedBuilder.build()
-        ));
+        ).thenAccept(m -> authorMessages.put(e.getPlayer(), m.getId())));
 
         if(DiscordConnect.getInstance().canBotBeUsed()) {
             assert DiscordConnect.getInstance().getBotManager() != null;
@@ -195,7 +197,7 @@ public class BungeeListener implements Listener {
                 name,
                 avatarURL,
                 webhookEmbedBuilder.build()
-        ));
+        ).thenAccept(m -> authorMessages.put(e.getPlayer(), m.getId())));
     }
 
     /**

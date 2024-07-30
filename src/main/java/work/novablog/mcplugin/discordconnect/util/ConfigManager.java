@@ -30,6 +30,7 @@ public class ConfigManager {
     public boolean doUpdateCheck;
 
     public String fromDiscordToMinecraftFormat;
+    public String fromDiscordToMinecraftReferencedFormat;
     public String fromMinecraftToDiscordName;
     public String fromDiscordToDiscordName;
 
@@ -73,6 +74,7 @@ public class ConfigManager {
         doUpdateCheck = pluginConfig.getBoolean("updateCheck");
 
         fromDiscordToMinecraftFormat = pluginConfig.getString("fromDiscordToMinecraftFormat");
+        fromDiscordToMinecraftReferencedFormat = pluginConfig.getString("fromDiscordToMinecraftReferencedFormat");
         fromMinecraftToDiscordName = pluginConfig.getString("fromMinecraftToDiscordName");
         fromDiscordToDiscordName = pluginConfig.getString("fromDiscordToDiscordName");
 

@@ -9,6 +9,7 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
+import work.novablog.mcplugin.discordconnect.util.AuthorMessages;
 import work.novablog.mcplugin.discordconnect.util.ConvertUtil;
 import work.novablog.mcplugin.discordconnect.util.discord.DiscordWebhookSender;
 
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 public class LunaChatListener implements Listener {
+    private final AuthorMessages authorMessages = DiscordConnect.getInstance().getAuthorMessages();
     private final String fromMinecraftToDiscordName;
     private final String japanizeFormat;
     private final UUIDCacheData uuidCacheData;
@@ -61,7 +63,7 @@ public class LunaChatListener implements Listener {
                 name,
                 avatarUrl,
                 message
-        ));
+        ).thenAccept(m -> authorMessages.put(playerUuid, event.getMember().getName(), m.getId())));
     }
 
     /**
@@ -87,6 +89,6 @@ public class LunaChatListener implements Listener {
                 name,
                 avatarUrl,
                 convertedMessage
-        ));
+        ).thenAccept(m -> authorMessages.put(playerUuid, event.getMember().getName(), m.getId())));
     }
 }
