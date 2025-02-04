@@ -10,6 +10,7 @@ import work.novablog.mcplugin.discordconnect.DiscordConnect;
 public class ChatCasterListener implements Listener {
     /**
      * グローバルチャットに送信されたら実行（連携プラグイン有効時のみ実行される）
+     *
      * @param event チャット情報
      */
     @EventHandler

@@ -21,10 +21,14 @@ public class LunaChatListener implements Listener {
     public void setToDiscordFormat(String toDiscordFormat) {
         this.toDiscordFormat = toDiscordFormat;
     }
-    public void setJapanizeFormat(String japanizeFormat) {this.japanizeFormat = japanizeFormat;}
+
+    public void setJapanizeFormat(String japanizeFormat) {
+        this.japanizeFormat = japanizeFormat;
+    }
 
     /**
      * Japanize化すべきかどうか判断する
+     *
      * @param event LunaChatBungeeChannelChatEvent
      * @return 変換すべきならtrue
      */
@@ -46,20 +50,21 @@ public class LunaChatListener implements Listener {
 
     /**
      * LunaChatのチャンネルにメッセージが送信されたら実行
+     *
      * @param event チャット情報
      */
     @EventHandler
     public void onChat(LunaChatBungeeChannelChatEvent event) {
-        if(!event.getChannel().isGlobalChannel()) return;
+        if (!event.getChannel().isGlobalChannel()) return;
 
         ProxyServer.getInstance().getScheduler().schedule(DiscordConnect.getInstance(), () -> {
             LunaChatBungee lunaChat = DiscordConnect.getInstance().getLunaChat();
             String message;
-            if(shouldJapanize(event)) {
+            if (shouldJapanize(event)) {
                 String jp = lunaChat.getLunaChatAPI().japanize(event.getNgMaskedMessage(), JapanizeType.GOOGLE_IME);
                 MarkComponent[] components = MarkdownConverter.fromMinecraftMessage(jp, '&');
                 message = japanizeFormat.replace("{japanized}", MarkdownConverter.toDiscordMessage(components));
-            }else{
+            } else {
                 message = toDiscordFormat;
             }
             MarkComponent[] components = MarkdownConverter.fromMinecraftMessage(event.getNgMaskedMessage(), '&');

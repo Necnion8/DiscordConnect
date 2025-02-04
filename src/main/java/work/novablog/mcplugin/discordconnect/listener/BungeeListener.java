@@ -33,20 +33,21 @@ public class BungeeListener implements Listener {
 
     /**
      * チャットが送信されたら実行
+     *
      * @param event チャット情報
      */
     @EventHandler
     public void onChat(ChatEvent event) {
         //コマンドなら
-        if(event.isCommand() || event.isCancelled() || !(event.getSender() instanceof ProxiedPlayer)) return;
+        if (event.isCommand() || event.isCancelled() || !(event.getSender() instanceof ProxiedPlayer)) return;
 
         N8ChatCasterAPI chatCasterApi = DiscordConnect.getInstance().getChatCasterAPI();
         LunaChatBungee lunaChat = DiscordConnect.getInstance().getLunaChat();
         if ((chatCasterApi == null || !chatCasterApi.isEnabledChatCaster()) && lunaChat == null) {
             // 連携プラグインが無効の場合
-            ProxiedPlayer sender = (ProxiedPlayer)event.getSender();
+            ProxiedPlayer sender = (ProxiedPlayer) event.getSender();
             String senderServer = sender.getServer().getInfo().getName();
-            if(hiddenServers.contains(senderServer)) senderServer = dummyServerName;
+            if (hiddenServers.contains(senderServer)) senderServer = dummyServerName;
             String message = event.getMessage();
 
             MarkComponent[] components = MarkdownConverter.fromMinecraftMessage(message, '&');
@@ -61,6 +62,7 @@ public class BungeeListener implements Listener {
 
     /**
      * ログインされたら
+     *
      * @param e ログイン情報
      */
     @EventHandler
@@ -85,6 +87,7 @@ public class BungeeListener implements Listener {
 
     /**
      * 切断されたら
+     *
      * @param e 切断情報
      */
     @EventHandler
@@ -109,11 +112,12 @@ public class BungeeListener implements Listener {
 
     /**
      * サーバー間を移動したら
+     *
      * @param e プレイヤー情報
      */
     @EventHandler
     public void onSwitch(ServerSwitchEvent e) {
-        if(hiddenServers.contains(e.getPlayer().getServer().getInfo().getName())) return;
+        if (hiddenServers.contains(e.getPlayer().getServer().getInfo().getName())) return;
 
         DiscordConnect.getInstance().getBotManager().sendMessageToChatChannel(
                 Message.userActivity.toString(),
@@ -139,6 +143,6 @@ public class BungeeListener implements Listener {
                 DiscordConnect.getInstance().getBotManager().updateGameName(
                         DiscordConnect.getInstance().getProxy().getPlayers().size(),
                         DiscordConnect.getInstance().getProxy().getConfig().getPlayerLimit()
-        ),1L, TimeUnit.SECONDS);
+                ), 1L, TimeUnit.SECONDS);
     }
 }

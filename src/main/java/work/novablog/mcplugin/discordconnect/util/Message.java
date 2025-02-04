@@ -39,6 +39,7 @@ public enum Message {
 
     /**
      * propertiesファイルからメッセージを取ってくる
+     *
      * @return メッセージ
      */
     @Override

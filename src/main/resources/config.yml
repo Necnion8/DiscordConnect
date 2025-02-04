@@ -1,6 +1,6 @@
 token: xxxx
 chatChannelIDs:
-- 000000000000000000
+  - 000000000000000000
 playingGameName: サーバー稼働中！（{players}/{max}人）
 
 prefix: "!"
@@ -9,7 +9,7 @@ toDiscordFormat: "*({server})* **{sender}** : {original}"
 updateCheck: true
 
 hiddenServers:
-- test
+  - test
 dummyServerName: "----"
 # LunaChat使用時にのみ有効 (Only when using the LunaChat plugin)
 japanizeFormat: "*({server})* **{sender}** : {original} ({japanized})"

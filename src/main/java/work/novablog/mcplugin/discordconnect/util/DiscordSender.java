@@ -8,7 +8,7 @@ import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DiscordSender extends Thread{
+public class DiscordSender extends Thread {
     private final TextChannel channel;
     private final Queue<Object> queue = new ArrayDeque<>();
     private boolean isStopped = false;
@@ -19,15 +19,17 @@ public class DiscordSender extends Thread{
 
     /**
      * キューに送信するメッセージを追加する
+     *
      * @param text 送信するメッセージ
      */
     public void addQueue(String text) {
-        if(text.equals("")) return;
+        if (text.equals("")) return;
         queue.add(text);
     }
 
     /**
      * キューに送信する埋め込みメッセージを追加する
+     *
      * @param embed 送信する埋め込みメッセージ
      */
     public void addQueue(MessageEmbed embed) {
@@ -51,7 +53,7 @@ public class DiscordSender extends Thread{
                 messages.append(queue.poll()).append("\n");
             }
 
-            if(!messages.toString().equals("")) {
+            if (!messages.toString().equals("")) {
                 //制限が2000文字なので1900文字で区切る
                 Matcher m = Pattern.compile("[\\s\\S]{1,1900}").matcher(messages.toString());
                 while (m.find()) {
