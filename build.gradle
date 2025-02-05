@@ -15,14 +15,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly('net.md-5:bungeecord-api:1.18-R0.1-SNAPSHOT')
+    compileOnly('net.md-5:bungeecord-api:1.19-R0.1-SNAPSHOT')
     implementation("net.dv8tion:JDA:5.3.0") {
         exclude module: 'opus-java'
     }
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.13.2'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.2'
-    implementation('org.bstats:bstats-bungeecord:3.0.0')
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+    implementation('org.bstats:bstats-bungeecord:3.1.0')
     implementation(files('libs/MarkdownConverter-1.1-SNAPSHOT-min.jar'))
     compileOnly(files('libs/N8ChatCaster-dummy.jar'))
     compileOnly(files('libs/LunaChat.jar'))
