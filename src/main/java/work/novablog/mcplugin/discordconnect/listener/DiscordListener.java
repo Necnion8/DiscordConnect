@@ -23,21 +23,22 @@ public class DiscordListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent message) {
-        if(message.getAuthor().isBot()) return;
-        if(!DiscordConnect.getInstance().getBotManager().getChatChannelIds().contains(message.getChannel().getIdLong())) return;
+        if (message.getAuthor().isBot()) return;
+        if (!DiscordConnect.getInstance().getBotManager().getChatChannelIds().contains(message.getChannel().getIdLong()))
+            return;
 
         if (message.getMessage().getContentRaw().startsWith(prefix)) {
             //コマンド TODO
             String command = message.getMessage().getContentRaw().replace(prefix, "").split("\\s+")[0];
             String[] args = message.getMessage().getContentRaw().replaceAll(Pattern.quote(prefix + command) + "\\s*", "").split("\\s+");
-            if(args[0].equals("")) {
+            if (args[0].equals("")) {
                 args = new String[0];
             }
 
             //DiscordConnect.getInstance().embed(Color.RED, "coming soon...", null);
         } else {
             //メッセージ
-            if(!message.getMessage().getContentRaw().equals("")) {
+            if (!message.getMessage().getContentRaw().equals("")) {
                 MarkComponent[] components = MarkdownConverter.fromDiscordMessage(message.getMessage().getContentRaw());
                 TextComponent[] convertedMessage = MarkdownConverter.toMinecraftMessage(components);
 

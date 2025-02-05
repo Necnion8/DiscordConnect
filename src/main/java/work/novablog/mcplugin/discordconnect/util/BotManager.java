@@ -1,24 +1,23 @@
 package work.novablog.mcplugin.discordconnect.util;
 
-import com.gmail.necnionch.myplugin.n8chatcaster.bungee.N8ChatCasterAPI;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
 import work.novablog.mcplugin.discordconnect.listener.ChatCasterListener;
 import work.novablog.mcplugin.discordconnect.listener.DiscordListener;
 import work.novablog.mcplugin.discordconnect.listener.LunaChatListener;
 
-import javax.security.auth.login.LoginException;
 import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,12 +37,11 @@ public class BotManager implements EventListener {
     public BotManager(String token, List<Long> chatChannelIds, String playingGameName, String prefix, String toMinecraftFormat) {
         //ログインする
         try {
-            bot = JDABuilder.createDefault(token)
-                    .addEventListeners(this)
-                    .setAutoReconnect(true)
+            bot = JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
+                    .addEventListeners(this, new DiscordListener(prefix, toMinecraftFormat))
                     .build();
-            bot.addEventListener(new DiscordListener(prefix, toMinecraftFormat));
-        } catch (LoginException e) {
+            isActive = true;
+        } catch (InvalidTokenException e) {
             DiscordConnect.getInstance().getLogger().severe(Message.invalidToken.toString());
             bot = null;
             isActive = false;
@@ -52,29 +50,31 @@ public class BotManager implements EventListener {
 
         this.chatChannelIds = chatChannelIds;
         this.playingGameName = playingGameName;
-        isActive = true;
     }
 
     /**
      * botをシャットダウンする
+     *
      * @param isRestart botの再起動(reload)か
      */
     public void botShutdown(boolean isRestart) {
-        if(!isActive) return;
+        if (!isActive) return;
 
         DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(DiscordConnect.getInstance().getBungeeListener());
         ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
         LunaChatListener lunaChatListener = DiscordConnect.getInstance().getLunaChatListener();
-        if(chatCasterListener != null)  DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(chatCasterListener);
-        if(lunaChatListener != null)  DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(lunaChatListener);
+        if (chatCasterListener != null)
+            DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(chatCasterListener);
+        if (lunaChatListener != null)
+            DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(lunaChatListener);
         DiscordConnect.getInstance().getLogger().info(Message.normalShutdown.toString());
 
-        if(isRestart) {
+        if (isRestart) {
             bot.shutdownNow();
             isRestarting = true;
-        }else{
+        } else {
             //プロキシ停止メッセージ
-            if(chatChannelSenders != null) {
+            if (chatChannelSenders != null) {
                 sendMessageToChatChannel(
                         Message.serverActivity.toString(),
                         null,
@@ -92,7 +92,7 @@ public class BotManager implements EventListener {
             }
 
             //送信完了まで待機
-            if(chatChannelSenders != null) {
+            if (chatChannelSenders != null) {
                 chatChannelSenders.forEach(DiscordSender::threadStop);
                 chatChannelSenders.forEach(sender -> {
                     try {
@@ -116,21 +116,21 @@ public class BotManager implements EventListener {
 
     @Override
     public void onEvent(@NotNull GenericEvent event) {
-        if(event instanceof ReadyEvent) {
+        if (event instanceof ReadyEvent) {
             //Botのログインが完了
 
             //チャットチャンネルを探す
             chatChannelSenders = chatChannelIds.stream()
                     .map(id -> {
                         TextChannel chatChannel = bot.getTextChannelById(id);
-                        if(chatChannel == null) {
+                        if (chatChannel == null) {
                             return null;
-                        }else{
+                        } else {
                             return new DiscordSender(chatChannel);
                         }
                     })
                     .collect(Collectors.toList());
-            if(chatChannelSenders.contains(null)) {
+            if (chatChannelSenders.contains(null)) {
                 //無効なチャンネルがあれば
                 DiscordConnect.getInstance().getLogger().severe(Message.mainChannelNotFound.toString());
                 DiscordConnect.getInstance().getLogger().severe(Message.shutdownDueToError.toString());
@@ -142,8 +142,10 @@ public class BotManager implements EventListener {
             DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), DiscordConnect.getInstance().getBungeeListener());
             ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
             LunaChatListener lunaChatListener = DiscordConnect.getInstance().getLunaChatListener();
-            if(chatCasterListener != null) DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), chatCasterListener);
-            if(lunaChatListener != null) DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), lunaChatListener);
+            if (chatCasterListener != null)
+                DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), chatCasterListener);
+            if (lunaChatListener != null)
+                DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), lunaChatListener);
             DiscordConnect.getInstance().getBotManager().updateGameName(
                     DiscordConnect.getInstance().getProxy().getPlayers().size(),
                     DiscordConnect.getInstance().getProxy().getConfig().getPlayerLimit()
@@ -151,7 +153,7 @@ public class BotManager implements EventListener {
 
             DiscordConnect.getInstance().getLogger().info(Message.botIsReady.toString());
 
-            if(isRestarting) {
+            if (isRestarting) {
                 DiscordConnect.getInstance().getLogger().info(Message.botRestarted.toString());
                 isRestarting = false;
                 return;
@@ -176,6 +178,7 @@ public class BotManager implements EventListener {
 
     /**
      * チャットチャンネルへメッセージを送信
+     *
      * @param mes メッセージ
      */
     public void sendMessageToChatChannel(String mes) {
@@ -184,18 +187,19 @@ public class BotManager implements EventListener {
 
     /**
      * チャットチャンネルへ埋め込みメッセージを送信
-     * @param title タイトル
-     * @param titleUrl タイトルのリンクURL
-     * @param desc 説明
-     * @param color 色
+     *
+     * @param title       タイトル
+     * @param titleUrl    タイトルのリンクURL
+     * @param desc        説明
+     * @param color       色
      * @param embedFields フィールド
-     * @param author 送信者の名前
-     * @param authorUrl 送信者のリンクURL
-     * @param authorIcon 送信者のアイコン
-     * @param footer フッター
-     * @param footerIcon フッターのアイコン
-     * @param image 画像
-     * @param thumbnail サムネイル
+     * @param author      送信者の名前
+     * @param authorUrl   送信者のリンクURL
+     * @param authorIcon  送信者のアイコン
+     * @param footer      フッター
+     * @param footerIcon  フッターのアイコン
+     * @param image       画像
+     * @param thumbnail   サムネイル
      */
     public void sendMessageToChatChannel(String title, String titleUrl, String desc, Color color, @NotNull List<MessageEmbed.Field> embedFields, String author, String authorUrl, String authorIcon, String footer, String footerIcon, String image, String thumbnail) {
         EmbedBuilder eb = new EmbedBuilder();
@@ -214,6 +218,7 @@ public class BotManager implements EventListener {
 
     /**
      * チャットチャンネルのIDリストを取得
+     *
      * @return IDリスト
      */
     public List<Long> getChatChannelIds() {
@@ -222,8 +227,9 @@ public class BotManager implements EventListener {
 
     /**
      * プレイ中のゲーム名を更新
+     *
      * @param playerCount プレイヤー数
-     * @param maxPlayers 最大プレイヤー数
+     * @param maxPlayers  最大プレイヤー数
      */
     public void updateGameName(int playerCount, int maxPlayers) {
         String maxPlayersString = maxPlayers != -1 ? String.valueOf(maxPlayers) : "∞";

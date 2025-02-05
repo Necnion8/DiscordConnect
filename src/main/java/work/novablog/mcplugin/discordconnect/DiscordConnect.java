@@ -42,6 +42,7 @@ public final class DiscordConnect extends Plugin {
 
     /**
      * インスタンスを返す
+     *
      * @return インスタンス
      */
     public static DiscordConnect getInstance() {
@@ -50,6 +51,7 @@ public final class DiscordConnect extends Plugin {
 
     /**
      * Botマネージャーを返す
+     *
      * @return botマネージャー
      */
     public BotManager getBotManager() {
@@ -58,6 +60,7 @@ public final class DiscordConnect extends Plugin {
 
     /**
      * 言語データを返す
+     *
      * @return 言語データ
      */
     public Properties getLangData() {
@@ -66,6 +69,7 @@ public final class DiscordConnect extends Plugin {
 
     /**
      * BungeeListenerを返す
+     *
      * @return BungeeListener
      */
     public BungeeListener getBungeeListener() {
@@ -74,6 +78,7 @@ public final class DiscordConnect extends Plugin {
 
     /**
      * ChatCasterAPIを返す
+     *
      * @return chatCasterAPI
      */
     public @Nullable N8ChatCasterAPI getChatCasterAPI() {
@@ -82,6 +87,7 @@ public final class DiscordConnect extends Plugin {
 
     /**
      * ChatCasterListenerを返す
+     *
      * @return chatCasterListener
      */
     public ChatCasterListener getChatCasterListener() {
@@ -90,6 +96,7 @@ public final class DiscordConnect extends Plugin {
 
     /**
      * LunaChatを返す
+     *
      * @return lunaChat
      */
     public LunaChatBungee getLunaChat() {
@@ -98,6 +105,7 @@ public final class DiscordConnect extends Plugin {
 
     /**
      * LunaChatListenerを返す
+     *
      * @return lunaChatListener
      */
     public LunaChatListener getLunaChatListener() {
@@ -120,7 +128,7 @@ public final class DiscordConnect extends Plugin {
 
         //LunaChatと連携
         temp = getProxy().getPluginManager().getPlugin("LunaChat");
-        if(temp instanceof LunaChatBungee) {
+        if (temp instanceof LunaChatBungee) {
             lunaChat = (LunaChatBungee) temp;
             lunaChatListener = new LunaChatListener();
         }
@@ -133,7 +141,7 @@ public final class DiscordConnect extends Plugin {
     }
 
     public void loadConfig() {
-        if(botManager != null) {
+        if (botManager != null) {
             botManager.botShutdown(true);
             botManager = null;
         }
@@ -148,7 +156,7 @@ public final class DiscordConnect extends Plugin {
         if (!languageFile.exists()) {
             //存在しなければコピー
             InputStream src = getResourceAsStream(Locale.getDefault().toString() + ".properties");
-            if(src == null) src = getResourceAsStream("ja_JP.properties");
+            if (src == null) src = getResourceAsStream("ja_JP.properties");
 
             try {
                 Files.copy(src, languageFile.toPath());
@@ -190,7 +198,7 @@ public final class DiscordConnect extends Plugin {
 
         int configVersion = pluginConfiguration.getInt("configVersion", 0);
         //configが古ければ新しいconfigをコピー
-        if(configVersion < CONFIG_LATEST) {
+        if (configVersion < CONFIG_LATEST) {
             try {
                 //古いconfigをリネーム
                 File old_config = new File(getDataFolder(), "config_old.yml");
@@ -211,7 +219,7 @@ public final class DiscordConnect extends Plugin {
                 //新しいlangファイルをコピー
                 languageFile = new File(getDataFolder(), "message.yml");
                 src = getResourceAsStream(Locale.getDefault().toString() + ".properties");
-                if(src == null) src = getResourceAsStream("ja_JP.properties");
+                if (src == null) src = getResourceAsStream("ja_JP.properties");
                 Files.copy(src, languageFile.toPath());
                 InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(languageFile), StandardCharsets.UTF_8);
                 BufferedReader bufferedReader = new BufferedReader(Objects.requireNonNull(inputStreamReader));
@@ -234,7 +242,7 @@ public final class DiscordConnect extends Plugin {
         String dummyServerName = pluginConfiguration.getString("dummyServerName");
         String japanizeFormat = pluginConfiguration.getString("japanizeFormat");
         bungeeListener = new BungeeListener(toDiscordFormat, hiddenServers, dummyServerName);
-        if(lunaChatListener != null) {
+        if (lunaChatListener != null) {
             lunaChatListener.setToDiscordFormat(toDiscordFormat);
             lunaChatListener.setJapanizeFormat(japanizeFormat);
         }
@@ -244,7 +252,7 @@ public final class DiscordConnect extends Plugin {
         boolean updateCheck = pluginConfiguration.getBoolean("updateCheck");
         String currentVer = getDescription().getVersion();
         String latestVer = GithubAPI.getLatestVersionNum();
-        if(updateCheck) {
+        if (updateCheck) {
             if (latestVer == null) {
                 // チェックに失敗
                 getLogger().info(
@@ -256,7 +264,7 @@ public final class DiscordConnect extends Plugin {
                         Message.pluginIsLatest.toString()
                                 .replace("{current}", currentVer)
                 );
-            }else{
+            } else {
                 // 新しいバージョンがある
                 getLogger().info(
                         Message.updateNotice.toString()
@@ -265,7 +273,7 @@ public final class DiscordConnect extends Plugin {
                 );
                 getLogger().info(
                         Message.updateDownloadLink.toString()
-                                .replace("{link}",pluginDownloadLink)
+                                .replace("{link}", pluginDownloadLink)
                 );
             }
         }
