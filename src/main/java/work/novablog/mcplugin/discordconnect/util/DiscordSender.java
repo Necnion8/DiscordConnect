@@ -3,32 +3,36 @@ package work.novablog.mcplugin.discordconnect.util;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * Discordのテキストチャンネルにキューのメッセージを送信する
+ * レート制限があるためテキストをまとめて送信する
+ * interruptされるとキューを捨てて終了する
+ */
 public class DiscordSender extends Thread {
     private final TextChannel channel;
-    private final Queue<Object> queue = new ArrayDeque<>();
-    private boolean isStopped = false;
+    private final BlockingQueue<Object> queue;
 
     public DiscordSender(TextChannel channel) {
         this.channel = channel;
+        queue = new LinkedBlockingQueue<>();
     }
 
     /**
-     * キューに送信するメッセージを追加する
+     * キューに送信するテキストメッセージを追加する
+     * メッセージは非同期で送信される
      *
-     * @param text 送信するメッセージ
+     * @param text 送信するテキストメッセージ
      */
     public void addQueue(String text) {
-        if (text.equals("")) return;
         queue.add(text);
     }
 
     /**
      * キューに送信する埋め込みメッセージを追加する
+     * メッセージは非同期で送信される
      *
      * @param embed 送信する埋め込みメッセージ
      */
@@ -36,41 +40,36 @@ public class DiscordSender extends Thread {
         queue.add(embed);
     }
 
-    /**
-     * スレッドを停止する
-     */
-    public void threadStop() {
-        isStopped = true;
-    }
-
+    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     public void run() {
-        while (!isStopped || !queue.isEmpty()) {
-            StringBuilder messages = new StringBuilder();
+        try {
+            Object queued = queue.take();
 
-            //キューを読む（文字）
-            while (!queue.isEmpty() && queue.peek() instanceof String) {
-                messages.append(queue.poll()).append("\n");
-            }
+            while (true) {
+                //キューを読む（テキスト）
+                StringBuilder messages = new StringBuilder();
+                for (; queued instanceof String; queued = queue.poll()) {
+                    //2000文字制限
+                    if (messages.length() + ((String) queued).length() > 1900) break;
 
-            if (!messages.toString().equals("")) {
-                //制限が2000文字なので1900文字で区切る
-                Matcher m = Pattern.compile("[\\s\\S]{1,1900}").matcher(messages.toString());
-                while (m.find()) {
-                    channel.sendMessage(m.group()).complete();
+                    messages.append((String) queued).append("\n");
+                }
+
+                if (!messages.toString().isEmpty()) {
+                    channel.sendMessage(messages).complete();
+                }
+
+                if (queued == null) {
+                    queued = queue.take();
+                }
+
+                //キューを読む（埋め込み）
+                for (; queued instanceof MessageEmbed; queued = queue.take()) {
+                    channel.sendMessageEmbeds((MessageEmbed) queued).complete();
                 }
             }
-
-            //キューを読む（埋め込み）
-            while (!queue.isEmpty() && queue.peek() instanceof MessageEmbed) {
-                channel.sendMessageEmbeds((MessageEmbed) queue.poll()).complete();
-            }
-
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        } catch (InterruptedException ignored) {
         }
     }
 }
