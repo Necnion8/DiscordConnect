@@ -5,17 +5,18 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.hooks.EventListener;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
 import work.novablog.mcplugin.discordconnect.listener.ChatCasterListener;
 import work.novablog.mcplugin.discordconnect.listener.DiscordListener;
 import work.novablog.mcplugin.discordconnect.listener.LunaChatListener;
 
-import javax.security.auth.login.LoginException;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,12 +37,11 @@ public class BotManager implements EventListener {
     public BotManager(String token, List<Long> chatChannelIds, String playingGameName, String prefix, String toMinecraftFormat) {
         //ログインする
         try {
-            bot = JDABuilder.createDefault(token)
-                    .addEventListeners(this)
-                    .setAutoReconnect(true)
+            bot = JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
+                    .addEventListeners(this, new DiscordListener(prefix, toMinecraftFormat))
                     .build();
-            bot.addEventListener(new DiscordListener(prefix, toMinecraftFormat));
-        } catch (LoginException e) {
+            isActive = true;
+        } catch (InvalidTokenException e) {
             DiscordConnect.getInstance().getLogger().severe(Message.invalidToken.toString());
             bot = null;
             isActive = false;
@@ -50,7 +50,6 @@ public class BotManager implements EventListener {
 
         this.chatChannelIds = chatChannelIds;
         this.playingGameName = playingGameName;
-        isActive = true;
     }
 
     /**

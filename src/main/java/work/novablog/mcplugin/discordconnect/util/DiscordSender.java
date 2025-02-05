@@ -1,7 +1,7 @@
 package work.novablog.mcplugin.discordconnect.util;
 
 import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
