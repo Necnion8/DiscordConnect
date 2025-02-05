@@ -8,7 +8,7 @@ import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
 import net.md_5.bungee.config.YamlConfiguration;
 import org.bstats.bungeecord.Metrics;
-import work.novablog.mcplugin.discordconnect.command.BungeeMinecraftCommand;
+import work.novablog.mcplugin.discordconnect.command.bungee.BungeeCommand;
 import work.novablog.mcplugin.discordconnect.listener.BungeeListener;
 import work.novablog.mcplugin.discordconnect.listener.ChatCasterListener;
 import work.novablog.mcplugin.discordconnect.listener.LunaChatListener;
@@ -137,7 +137,7 @@ public final class DiscordConnect extends Plugin {
         loadConfig();
 
         //コマンドの追加
-        getProxy().getPluginManager().registerCommand(this, new BungeeMinecraftCommand());
+        getProxy().getPluginManager().registerCommand(this, new BungeeCommand());
     }
 
     public void loadConfig() {
