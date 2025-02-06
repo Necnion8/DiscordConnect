@@ -21,24 +21,41 @@ public class CompositeCommand extends Command implements TabExecutor {
     private final HashMap<String, Command> subCommands;
     private Command defaultCommand;
 
+    /**
+     * サブコマンド無しの状態でコマンドを作成する
+     * コマンドは{@code name}または{@code aliases}で参照される
+     *
+     * @param name       コマンド名
+     * @param permission 実行に必要な権限
+     * @param aliases    エイリアス
+     */
     public CompositeCommand(@NotNull String name, @Nullable String permission, @NotNull String... aliases) {
         super(name, permission, aliases);
         subCommands = new HashMap<>();
     }
 
+    /**
+     * サブコマンドを追加する
+     * 実行権限は{@link Command#hasPermission(CommandSender)}で判定される
+     *
+     * @param subCommands 追加するサブコマンド
+     */
     public void addSubCommands(@NotNull Command... subCommands) {
         for (Command subCommand : subCommands) {
-            addSubCommand(subCommand);
+            this.subCommands.put(subCommand.getName(), subCommand);
+            for (String alias : subCommand.getAliases()) {
+                this.subCommands.put(alias, subCommand);
+            }
         }
     }
 
-    public void addSubCommand(@NotNull Command subCommand) {
-        subCommands.put(subCommand.getName(), subCommand);
-        for (String alias : subCommand.getAliases()) {
-            subCommands.put(alias, subCommand);
-        }
-    }
-
+    /**
+     * デフォルトのコマンドを設定する
+     * 引数を指定しなかった場合に実行される
+     * ただしデフォルトコマンドがnullならばnot foundメッセージが送信される
+     *
+     * @param defaultCommand デフォルトのコマンド
+     */
     public void setDefaultCommand(@Nullable Command defaultCommand) {
         this.defaultCommand = defaultCommand;
     }

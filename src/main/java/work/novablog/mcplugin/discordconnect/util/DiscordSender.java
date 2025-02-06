@@ -10,11 +10,18 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Discordのテキストチャンネルにキューのメッセージを送信する
  * レート制限があるためテキストをまとめて送信する
+ * {@link Thread#interrupt()}で終了するが、キューに残っているメッセージはすべて送信される
  */
 public class DiscordSender extends Thread {
     private final TextChannel channel;
     private final BlockingQueue<Object> queue;
 
+    /**
+     * {@code channel}を担当するDiscordSenderを作成する
+     * {@link Thread#start()}でメッセージを送信し始める
+     *
+     * @param channel 送信先のテキストチャンネル
+     */
     public DiscordSender(@NotNull TextChannel channel) {
         this.channel = channel;
         queue = new LinkedBlockingQueue<>();
