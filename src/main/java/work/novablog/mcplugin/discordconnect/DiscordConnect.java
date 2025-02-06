@@ -246,7 +246,7 @@ public final class DiscordConnect extends Plugin {
             lunaChatListener.setToDiscordFormat(toDiscordFormat);
             lunaChatListener.setJapanizeFormat(japanizeFormat);
         }
-        botManager = new BotManager(token, chatChannelIds, playingGameName, prefix, toMinecraftFormat);
+        botManager = new BotManager(getLogger(), token, chatChannelIds, playingGameName, prefix, toMinecraftFormat);
 
         // アップデートチェック
         boolean updateCheck = pluginConfiguration.getBoolean("updateCheck");

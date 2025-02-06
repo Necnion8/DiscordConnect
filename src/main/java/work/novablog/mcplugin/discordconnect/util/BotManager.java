@@ -20,12 +20,13 @@ import work.novablog.mcplugin.discordconnect.listener.LunaChatListener;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.logging.Logger;
 
 /**
  * DiscordBotの管理を行う
  */
 public class BotManager implements EventListener {
+    private final Logger logger;
     private JDA bot;
     private List<Long> chatChannelIds;
     private List<DiscordSender> chatChannelSenders;
@@ -34,7 +35,9 @@ public class BotManager implements EventListener {
     private boolean isActive;
     private static boolean isRestarting;
 
-    public BotManager(String token, List<Long> chatChannelIds, String playingGameName, String prefix, String toMinecraftFormat) {
+    public BotManager(Logger logger, String token, List<Long> chatChannelIds, String playingGameName, String prefix, String toMinecraftFormat) {
+        this.logger = logger;
+
         //ログインする
         try {
             bot = JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
@@ -42,13 +45,14 @@ public class BotManager implements EventListener {
                     .build();
             isActive = true;
         } catch (InvalidTokenException e) {
-            DiscordConnect.getInstance().getLogger().severe(Message.invalidToken.toString());
+            this.logger.severe(Message.invalidToken.toString());
             bot = null;
             isActive = false;
             return;
         }
 
         this.chatChannelIds = chatChannelIds;
+        this.chatChannelSenders = new ArrayList<>();
         this.playingGameName = playingGameName;
     }
 
@@ -67,7 +71,7 @@ public class BotManager implements EventListener {
             DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(chatCasterListener);
         if (lunaChatListener != null)
             DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(lunaChatListener);
-        DiscordConnect.getInstance().getLogger().info(Message.normalShutdown.toString());
+        logger.info(Message.normalShutdown.toString());
 
         if (isRestart) {
             bot.shutdownNow();
@@ -119,26 +123,20 @@ public class BotManager implements EventListener {
         if (event instanceof ReadyEvent) {
             //Botのログインが完了
 
-            //チャットチャンネルを探す
-            chatChannelSenders = chatChannelIds.stream()
-                    .map(id -> {
-                        TextChannel chatChannel = bot.getTextChannelById(id);
-                        if (chatChannel == null) {
-                            return null;
-                        } else {
-                            return new DiscordSender(chatChannel);
-                        }
-                    })
-                    .collect(Collectors.toList());
-            if (chatChannelSenders.contains(null)) {
-                //無効なチャンネルがあれば
-                DiscordConnect.getInstance().getLogger().severe(Message.mainChannelNotFound.toString());
-                DiscordConnect.getInstance().getLogger().severe(Message.shutdownDueToError.toString());
-                chatChannelSenders = null;
-                bot.shutdownNow();
-                return;
+            //チャットチャンネルを登録
+            for (long id : chatChannelIds) {
+                TextChannel channel = bot.getTextChannelById(id);
+
+                if (channel == null) {
+                    logger.warning(Message.channelNotFound.toString().replace("{id}", String.valueOf(id)));
+                    continue;
+                }
+
+                DiscordSender sender = new DiscordSender(channel);
+                sender.start();
+                chatChannelSenders.add(sender);
             }
-            chatChannelSenders.forEach(Thread::start);
+
             DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), DiscordConnect.getInstance().getBungeeListener());
             ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
             LunaChatListener lunaChatListener = DiscordConnect.getInstance().getLunaChatListener();
@@ -146,15 +144,15 @@ public class BotManager implements EventListener {
                 DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), chatCasterListener);
             if (lunaChatListener != null)
                 DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), lunaChatListener);
-            DiscordConnect.getInstance().getBotManager().updateGameName(
+            updateGameName(
                     DiscordConnect.getInstance().getProxy().getPlayers().size(),
                     DiscordConnect.getInstance().getProxy().getConfig().getPlayerLimit()
             );
 
-            DiscordConnect.getInstance().getLogger().info(Message.botIsReady.toString());
+            logger.info(Message.botIsReady.toString());
 
             if (isRestarting) {
-                DiscordConnect.getInstance().getLogger().info(Message.botRestarted.toString());
+                logger.info(Message.botRestarted.toString());
                 isRestarting = false;
                 return;
             }
