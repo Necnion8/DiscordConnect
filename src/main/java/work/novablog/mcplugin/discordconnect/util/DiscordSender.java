@@ -9,7 +9,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * Discordのテキストチャンネルにキューのメッセージを送信する
  * レート制限があるためテキストをまとめて送信する
- * interruptされるとキューを捨てて終了する
  */
 public class DiscordSender extends Thread {
     private final TextChannel channel;
@@ -22,54 +21,59 @@ public class DiscordSender extends Thread {
 
     /**
      * キューに送信するテキストメッセージを追加する
+     * interruptedの場合は追加されない
      * メッセージは非同期で送信される
      *
      * @param text 送信するテキストメッセージ
+     * @return キューに追加されたか
      */
-    public void addQueue(String text) {
-        queue.add(text);
+    public boolean addQueue(String text) {
+        if (isInterrupted()) return false;
+        else return queue.add(text);
     }
 
     /**
      * キューに送信する埋め込みメッセージを追加する
+     * interruptedの場合は追加されない
      * メッセージは非同期で送信される
      *
      * @param embed 送信する埋め込みメッセージ
+     * @return キューに追加されたか
      */
-    public void addQueue(MessageEmbed embed) {
-        queue.add(embed);
+    public boolean addQueue(MessageEmbed embed) {
+        if (isInterrupted()) return false;
+        else return queue.add(embed);
     }
 
-    @SuppressWarnings("InfiniteLoopStatement")
     @Override
     public void run() {
-        try {
-            Object queued = queue.take();
+        Object queued = null;
 
-            while (true) {
-                //キューを読む（テキスト）
-                StringBuilder messages = new StringBuilder();
-                for (; queued instanceof String; queued = queue.poll()) {
-                    //2000文字制限
-                    if (messages.length() + ((String) queued).length() > 1900) break;
-
-                    messages.append((String) queued).append("\n");
-                }
-
-                if (!messages.toString().isEmpty()) {
-                    channel.sendMessage(messages).complete();
-                }
-
-                if (queued == null) {
+        while (true) {
+            if (queued == null) {
+                try {
                     queued = queue.take();
-                }
-
-                //キューを読む（埋め込み）
-                for (; queued instanceof MessageEmbed; queued = queue.take()) {
-                    channel.sendMessageEmbeds((MessageEmbed) queued).complete();
+                } catch (InterruptedException e) {
+                    if (queue.isEmpty()) break;
+                    queued = queue.poll();
                 }
             }
-        } catch (InterruptedException ignored) {
+
+            //キューを読む（テキスト）
+            StringBuilder messages = new StringBuilder();
+            for (; queued instanceof String; queued = queue.poll()) {
+                if (messages.length() + ((String) queued).length() > 1900) break;  // 2000文字制限
+                messages.append((String) queued).append("\n");
+            }
+
+            if (!messages.toString().isEmpty()) {
+                channel.sendMessage(messages).complete();
+            }
+
+            //キューを読む（埋め込み）
+            for (; queued instanceof MessageEmbed; queued = queue.poll()) {
+                channel.sendMessageEmbeds((MessageEmbed) queued).complete();
+            }
         }
     }
 }

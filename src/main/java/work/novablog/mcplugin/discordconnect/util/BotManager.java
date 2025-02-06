@@ -75,7 +75,6 @@ public class BotManager implements EventListener {
         } else {
             //プロキシ停止メッセージ
             if (chatChannelSenders != null) {
-                // FIXME: キューが捨てられる場合がある
                 sendMessageToChatChannel(
                         Message.serverActivity.toString(),
                         null,
