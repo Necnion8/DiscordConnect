@@ -4,6 +4,8 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.novablog.mcplugin.discordconnect.util.Message;
 
 import java.util.ArrayList;
@@ -19,25 +21,25 @@ public class CompositeCommand extends Command implements TabExecutor {
     private final HashMap<String, Command> subCommands;
     private Command defaultCommand;
 
-    public CompositeCommand(String name, String permission, String... aliases) {
+    public CompositeCommand(@NotNull String name, @Nullable String permission, @NotNull String... aliases) {
         super(name, permission, aliases);
         subCommands = new HashMap<>();
     }
 
-    public void addSubCommands(Command... subCommands) {
+    public void addSubCommands(@NotNull Command... subCommands) {
         for (Command subCommand : subCommands) {
             addSubCommand(subCommand);
         }
     }
 
-    public void addSubCommand(Command subCommand) {
+    public void addSubCommand(@NotNull Command subCommand) {
         subCommands.put(subCommand.getName(), subCommand);
         for (String alias : subCommand.getAliases()) {
             subCommands.put(alias, subCommand);
         }
     }
 
-    public void setDefaultCommand(Command defaultCommand) {
+    public void setDefaultCommand(@Nullable Command defaultCommand) {
         this.defaultCommand = defaultCommand;
     }
 

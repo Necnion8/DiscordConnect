@@ -2,6 +2,7 @@ package work.novablog.mcplugin.discordconnect.util;
 
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -14,7 +15,7 @@ public class DiscordSender extends Thread {
     private final TextChannel channel;
     private final BlockingQueue<Object> queue;
 
-    public DiscordSender(TextChannel channel) {
+    public DiscordSender(@NotNull TextChannel channel) {
         this.channel = channel;
         queue = new LinkedBlockingQueue<>();
     }
@@ -27,7 +28,7 @@ public class DiscordSender extends Thread {
      * @param text 送信するテキストメッセージ
      * @return キューに追加されたか
      */
-    public boolean addQueue(String text) {
+    public boolean addQueue(@NotNull String text) {
         if (isInterrupted()) return false;
         else return queue.add(text);
     }
@@ -40,7 +41,7 @@ public class DiscordSender extends Thread {
      * @param embed 送信する埋め込みメッセージ
      * @return キューに追加されたか
      */
-    public boolean addQueue(MessageEmbed embed) {
+    public boolean addQueue(@NotNull MessageEmbed embed) {
         if (isInterrupted()) return false;
         else return queue.add(embed);
     }
