@@ -10,7 +10,7 @@ public enum Message {
     channelNotFound,
     normalShutdown,
     botIsReady,
-    botRestarted,
+    botRestarting,
     configReloaded,
     configIsOld,
 

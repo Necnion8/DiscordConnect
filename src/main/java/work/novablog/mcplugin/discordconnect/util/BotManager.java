@@ -33,7 +33,6 @@ public class BotManager implements EventListener {
     private String playingGameName;
 
     private boolean isActive;
-    private static boolean isRestarting;
 
     public BotManager(Logger logger, String token, List<Long> chatChannelIds, String playingGameName, String prefix, String toMinecraftFormat) {
         this.logger = logger;
@@ -58,10 +57,8 @@ public class BotManager implements EventListener {
 
     /**
      * botをシャットダウンする
-     *
-     * @param isRestart botの再起動(reload)か
      */
-    public void botShutdown(boolean isRestart) {
+    public void botShutdown() {
         if (!isActive) return;
 
         DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(DiscordConnect.getInstance().getBungeeListener());
@@ -73,44 +70,34 @@ public class BotManager implements EventListener {
             DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(lunaChatListener);
         logger.info(Message.normalShutdown.toString());
 
-        if (isRestart) {
-            bot.shutdownNow();
-            isRestarting = true;
-        } else {
-            //プロキシ停止メッセージ
-            if (chatChannelSenders != null) {
-                sendMessageToChatChannel(
-                        Message.serverActivity.toString(),
-                        null,
-                        Message.proxyStopped.toString(),
-                        new Color(102, 205, 170),
-                        new ArrayList<>(),
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null
-                );
-            }
+        //プロキシ停止メッセージ
+        sendMessageToChatChannel(
+                Message.serverActivity.toString(),
+                null,
+                Message.proxyStopped.toString(),
+                new Color(102, 205, 170),
+                new ArrayList<>(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
 
-            //送信完了まで待機
-            if (chatChannelSenders != null) {
-                chatChannelSenders.forEach(DiscordSender::interrupt);
-                chatChannelSenders.forEach(sender -> {
-                    try {
-                        sender.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                });
-                chatChannelSenders = null;
+        //送信完了まで待機
+        chatChannelSenders.forEach(DiscordSender::interrupt);
+        chatChannelSenders.forEach(sender -> {
+            try {
+                sender.join();
+            } catch (InterruptedException e) {
+                logger.warning(e.getMessage());
             }
+        });
 
-            //botのシャットダウン
-            bot.shutdown();
-        }
+        //botのシャットダウン
+        bot.shutdown();
 
         bot = null;
         chatChannelSenders = null;
@@ -150,12 +137,6 @@ public class BotManager implements EventListener {
             );
 
             logger.info(Message.botIsReady.toString());
-
-            if (isRestarting) {
-                logger.info(Message.botRestarted.toString());
-                isRestarting = false;
-                return;
-            }
 
             sendMessageToChatChannel(
                     Message.serverActivity.toString(),

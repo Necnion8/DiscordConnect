@@ -17,13 +17,12 @@ import work.novablog.mcplugin.discordconnect.util.GithubAPI;
 import work.novablog.mcplugin.discordconnect.util.Message;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 public final class DiscordConnect extends Plugin {
     private static final int CONFIG_LATEST = 4;
@@ -142,7 +141,21 @@ public final class DiscordConnect extends Plugin {
 
     public void loadConfig() {
         if (botManager != null) {
-            botManager.botShutdown(true);
+            botManager.sendMessageToChatChannel(
+                    Message.serverActivity.toString(),
+                    null,
+                    Message.botRestarting.toString(),
+                    new Color(102, 205, 170),
+                    new ArrayList<>(),
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+            botManager.botShutdown();
             botManager = null;
         }
 
@@ -281,6 +294,6 @@ public final class DiscordConnect extends Plugin {
 
     @Override
     public void onDisable() {
-        botManager.botShutdown(false);
+        botManager.botShutdown();
     }
 }
