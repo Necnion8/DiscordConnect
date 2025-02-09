@@ -1,6 +1,6 @@
 package work.novablog.mcplugin.discordconnect.util;
 
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
 
 /**
@@ -43,7 +43,10 @@ public enum Message {
      * @return メッセージ
      */
     @Override
-    public @Nullable String toString() {
-        return DiscordConnect.getInstance().getLangData().getProperty(name());
+    public @NotNull String toString() {
+        return DiscordConnect.getInstance().getLangData().getProperty(
+                name(),
+                "Message not found: " + name()
+        );
     }
 }

@@ -11,8 +11,9 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.md_5.bungee.api.ProxyServer;
 import org.jetbrains.annotations.NotNull;
-import work.novablog.mcplugin.discordconnect.DiscordConnect;
+import org.jetbrains.annotations.Nullable;
 import work.novablog.mcplugin.discordconnect.listener.DiscordListener;
 
 import java.awt.*;
@@ -32,7 +33,14 @@ public class BotManager implements EventListener {
 
     private boolean isActive;
 
-    public BotManager(Logger logger, String token, List<Long> chatChannelIds, String playingGameName, String prefix, String toMinecraftFormat) {
+    public BotManager(
+            @NotNull Logger logger,
+            @NotNull String token,
+            @NotNull List<Long> chatChannelIds,
+            @NotNull String playingGameName,
+            @NotNull String prefix,
+            @NotNull String toMinecraftFormat
+    ) {
         this.logger = logger;
 
         //ログインする
@@ -55,6 +63,7 @@ public class BotManager implements EventListener {
 
     /**
      * botをシャットダウンする
+     * これを呼んだあとはこのインスタンスを利用してはならない
      */
     public void botShutdown() {
         if (!isActive) return;
@@ -116,8 +125,8 @@ public class BotManager implements EventListener {
             }
 
             updateGameName(
-                    DiscordConnect.getInstance().getProxy().getPlayers().size(),
-                    DiscordConnect.getInstance().getProxy().getConfig().getPlayerLimit()
+                    ProxyServer.getInstance().getPlayers().size(),
+                    ProxyServer.getInstance().getConfig().getPlayerLimit()
             );
 
             logger.info(Message.botIsReady.toString());
@@ -144,7 +153,7 @@ public class BotManager implements EventListener {
      *
      * @param mes メッセージ
      */
-    public void sendMessageToChatChannel(String mes) {
+    public void sendMessageToChatChannel(@NotNull String mes) {
         chatChannelSenders.forEach(sender -> sender.addQueue(mes));
     }
 
@@ -164,12 +173,25 @@ public class BotManager implements EventListener {
      * @param image       画像
      * @param thumbnail   サムネイル
      */
-    public void sendMessageToChatChannel(String title, String titleUrl, String desc, Color color, @NotNull List<MessageEmbed.Field> embedFields, String author, String authorUrl, String authorIcon, String footer, String footerIcon, String image, String thumbnail) {
+    public void sendMessageToChatChannel(
+            @Nullable String title,
+            @Nullable String titleUrl,
+            @Nullable String desc,
+            @Nullable Color color,
+            @NotNull List<MessageEmbed.Field> embedFields,
+            @Nullable String author,
+            @Nullable String authorUrl,
+            @Nullable String authorIcon,
+            @Nullable String footer,
+            @Nullable String footerIcon,
+            @Nullable String image,
+            @Nullable String thumbnail
+    ) {
         EmbedBuilder eb = new EmbedBuilder();
 
         eb.setTitle(title, titleUrl);
-        eb.setColor(color);
         eb.setDescription(desc);
+        eb.setColor(color);
         embedFields.forEach(eb::addField);
         eb.setAuthor(author, authorUrl, authorIcon);
         eb.setFooter(footer, footerIcon);
@@ -184,7 +206,7 @@ public class BotManager implements EventListener {
      *
      * @return IDリスト
      */
-    public List<Long> getChatChannelIds() {
+    public @Nullable List<Long> getChatChannelIds() {
         return chatChannelIds;
     }
 
