@@ -19,9 +19,9 @@ public class BungeeCommand extends CompositeCommand {
         Command helpCommand = new Command("help") {
             @Override
             public void execute(CommandSender sender, String[] args) {
-                sender.sendMessage(new TextComponent(Message.bungeeCommandHelpLine1.toString()));
-                sender.sendMessage(new TextComponent(Message.bungeeCommandHelpHelpcmd.toString()));
-                sender.sendMessage(new TextComponent(Message.bungeeCommandHelpReloadcmd.toString()));
+                sender.sendMessage(TextComponent.fromLegacyText(Message.bungeeCommandHelpLine1.toString()));
+                sender.sendMessage(TextComponent.fromLegacyText(Message.bungeeCommandHelpHelpcmd.toString()));
+                sender.sendMessage(TextComponent.fromLegacyText(Message.bungeeCommandHelpReloadcmd.toString()));
             }
         };
 
@@ -29,7 +29,7 @@ public class BungeeCommand extends CompositeCommand {
             @Override
             public void execute(CommandSender sender, String[] args) {
                 DiscordConnect.getInstance().loadConfig();
-                sender.sendMessage(new TextComponent(Message.configReloaded.toString()));
+                sender.sendMessage(TextComponent.fromLegacyText(Message.configReloaded.toString()));
             }
         };
 

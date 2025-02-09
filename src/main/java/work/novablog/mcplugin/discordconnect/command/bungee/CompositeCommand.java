@@ -64,12 +64,12 @@ public class CompositeCommand extends Command implements TabExecutor {
     public void execute(CommandSender sender, String[] args) {
         Command command = args.length == 0 ? defaultCommand : subCommands.get(args[0]);
         if (command == null) {
-            sender.sendMessage(new TextComponent(Message.bungeeCommandNotFound.toString()));
+            sender.sendMessage(TextComponent.fromLegacyText(Message.bungeeCommandNotFound.toString()));
             return;
         }
 
         if (!command.hasPermission(sender)) {
-            sender.sendMessage(new TextComponent(Message.bungeeCommandDenied.toString()));
+            sender.sendMessage(TextComponent.fromLegacyText(Message.bungeeCommandDenied.toString()));
             return;
         }
 
