@@ -13,7 +13,6 @@ import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
-import work.novablog.mcplugin.discordconnect.listener.ChatCasterListener;
 import work.novablog.mcplugin.discordconnect.listener.DiscordListener;
 
 import java.awt.*;
@@ -60,9 +59,6 @@ public class BotManager implements EventListener {
     public void botShutdown() {
         if (!isActive) return;
 
-        ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
-        if (chatCasterListener != null)
-            DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(chatCasterListener);
         logger.info(Message.normalShutdown.toString());
 
         //プロキシ停止メッセージ
@@ -119,10 +115,6 @@ public class BotManager implements EventListener {
                 chatChannelSenders.add(sender);
             }
 
-
-            ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
-            if (chatCasterListener != null)
-                DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), chatCasterListener);
             updateGameName(
                     DiscordConnect.getInstance().getProxy().getPlayers().size(),
                     DiscordConnect.getInstance().getProxy().getConfig().getPlayerLimit()

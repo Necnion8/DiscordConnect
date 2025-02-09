@@ -17,7 +17,6 @@ import work.novablog.mcplugin.discordconnect.util.BotManager;
 import work.novablog.mcplugin.discordconnect.util.GithubAPI;
 import work.novablog.mcplugin.discordconnect.util.Message;
 
-import javax.annotation.Nullable;
 import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -67,24 +66,6 @@ public final class DiscordConnect extends Plugin {
         return langData;
     }
 
-    /**
-     * ChatCasterAPIを返す
-     *
-     * @return chatCasterAPI
-     */
-    public @Nullable N8ChatCasterAPI getChatCasterAPI() {
-        return chatCasterAPI;
-    }
-
-    /**
-     * ChatCasterListenerを返す
-     *
-     * @return chatCasterListener
-     */
-    public ChatCasterListener getChatCasterListener() {
-        return chatCasterListener;
-    }
-
     @Override
     public void onEnable() {
         instance = this;
@@ -96,7 +77,6 @@ public final class DiscordConnect extends Plugin {
         Plugin temp = getProxy().getPluginManager().getPlugin("N8ChatCaster");
         if (temp instanceof N8ChatCasterPlugin) {
             chatCasterAPI = (((N8ChatCasterPlugin) temp).getChatCasterApi());
-            chatCasterListener = new ChatCasterListener();
         }
 
         //LunaChatと連携
@@ -116,6 +96,7 @@ public final class DiscordConnect extends Plugin {
         if (botManager != null) {
             if (bungeeListener != null) getProxy().getPluginManager().unregisterListener(bungeeListener);
             if (lunaChatListener != null) getProxy().getPluginManager().unregisterListener(lunaChatListener);
+            if (chatCasterListener != null) getProxy().getPluginManager().unregisterListener(chatCasterListener);
 
             botManager.sendMessageToChatChannel(
                     Message.serverActivity.toString(),
@@ -234,6 +215,10 @@ public final class DiscordConnect extends Plugin {
         if (lunaChatAPI != null) {
             lunaChatListener = new LunaChatListener(botManager, toDiscordFormat);
             getProxy().getPluginManager().registerListener(this, lunaChatListener);
+        }
+        if (chatCasterAPI != null) {
+            chatCasterListener = new ChatCasterListener(botManager, chatCasterAPI);
+            getProxy().getPluginManager().registerListener(this, chatCasterListener);
         }
 
         // アップデートチェック
