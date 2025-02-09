@@ -205,11 +205,10 @@ public final class DiscordConnect extends Plugin {
         String token = pluginConfiguration.getString("token");
         List<Long> chatChannelIds = pluginConfiguration.getLongList("chatChannelIDs");
         String playingGameName = pluginConfiguration.getString("playingGameName");
-        String prefix = pluginConfiguration.getString("prefix");
         String toMinecraftFormat = pluginConfiguration.getString("toMinecraftFormat");
         String toDiscordFormat = pluginConfiguration.getString("toDiscordFormat");
         List<String> hiddenServers = pluginConfiguration.getStringList("hiddenServers");
-        botManager = new BotManager(getLogger(), token, chatChannelIds, playingGameName, prefix, toMinecraftFormat);
+        botManager = new BotManager(getLogger(), token, chatChannelIds, playingGameName, toMinecraftFormat);
         bungeeListener = new BungeeListener(botManager, toDiscordFormat, hiddenServers);
         getProxy().getPluginManager().registerListener(this, bungeeListener);
         if (lunaChatAPI != null) {

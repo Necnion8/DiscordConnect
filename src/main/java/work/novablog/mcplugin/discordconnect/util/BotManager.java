@@ -38,7 +38,6 @@ public class BotManager implements EventListener {
             @NotNull String token,
             @NotNull List<Long> chatChannelIds,
             @NotNull String playingGameName,
-            @NotNull String prefix,
             @NotNull String toMinecraftFormat
     ) {
         this.logger = logger;
@@ -46,7 +45,7 @@ public class BotManager implements EventListener {
         //ログインする
         try {
             bot = JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
-                    .addEventListeners(this, new DiscordListener(prefix, toMinecraftFormat))
+                    .addEventListeners(this, new DiscordListener(chatChannelIds, toMinecraftFormat))
                     .build();
             isActive = true;
         } catch (InvalidTokenException e) {
@@ -199,15 +198,6 @@ public class BotManager implements EventListener {
         eb.setThumbnail(thumbnail);
 
         chatChannelSenders.forEach(sender -> sender.addQueue(eb.build()));
-    }
-
-    /**
-     * チャットチャンネルのIDリストを取得
-     *
-     * @return IDリスト
-     */
-    public @Nullable List<Long> getChatChannelIds() {
-        return chatChannelIds;
     }
 
     /**
