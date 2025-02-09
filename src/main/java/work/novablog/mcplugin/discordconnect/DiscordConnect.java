@@ -252,14 +252,13 @@ public final class DiscordConnect extends Plugin {
         String toMinecraftFormat = pluginConfiguration.getString("toMinecraftFormat");
         String toDiscordFormat = pluginConfiguration.getString("toDiscordFormat");
         List<String> hiddenServers = pluginConfiguration.getStringList("hiddenServers");
-        String dummyServerName = pluginConfiguration.getString("dummyServerName");
         String japanizeFormat = pluginConfiguration.getString("japanizeFormat");
-        bungeeListener = new BungeeListener(toDiscordFormat, hiddenServers, dummyServerName);
         if (lunaChatListener != null) {
             lunaChatListener.setToDiscordFormat(toDiscordFormat);
             lunaChatListener.setJapanizeFormat(japanizeFormat);
         }
         botManager = new BotManager(getLogger(), token, chatChannelIds, playingGameName, prefix, toMinecraftFormat);
+        bungeeListener = new BungeeListener(botManager, toDiscordFormat, hiddenServers);
 
         // アップデートチェック
         boolean updateCheck = pluginConfiguration.getBoolean("updateCheck");

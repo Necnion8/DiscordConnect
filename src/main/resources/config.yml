@@ -10,7 +10,6 @@ updateCheck: true
 
 hiddenServers:
   - test
-dummyServerName: "----"
 # LunaChat使用時にのみ有効 (Only when using the LunaChat plugin)
 japanizeFormat: "*({server})* **{sender}** : {original} ({japanized})"
 
