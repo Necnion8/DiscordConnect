@@ -2,6 +2,7 @@ package work.novablog.mcplugin.discordconnect.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -14,7 +15,7 @@ public class GithubAPI {
      *
      * @return バージョン番号
      */
-    public static String getLatestVersionNum() {
+    public static @Nullable String getLatestVersionNum() {
         try {
             StringBuilder result = new StringBuilder();
 

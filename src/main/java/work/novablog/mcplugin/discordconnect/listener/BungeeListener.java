@@ -65,11 +65,6 @@ public class BungeeListener implements Listener {
         );
     }
 
-    /**
-     * ログインされたら
-     *
-     * @param e ログイン情報
-     */
     @EventHandler
     public void onLogin(LoginEvent e) {
         botManager.sendMessageToChatChannel(
@@ -90,11 +85,6 @@ public class BungeeListener implements Listener {
         updatePlayerCount();
     }
 
-    /**
-     * 切断されたら
-     *
-     * @param e 切断情報
-     */
     @EventHandler
     public void onLogout(PlayerDisconnectEvent e) {
         botManager.sendMessageToChatChannel(
@@ -115,11 +105,6 @@ public class BungeeListener implements Listener {
         updatePlayerCount();
     }
 
-    /**
-     * サーバー間を移動したら
-     *
-     * @param e プレイヤー情報
-     */
     @EventHandler
     public void onSwitch(ServerSwitchEvent e) {
         if (hiddenServers.contains(e.getPlayer().getServer().getInfo().getName())) return;

@@ -1,5 +1,6 @@
 package work.novablog.mcplugin.discordconnect.util;
 
+import org.jetbrains.annotations.Nullable;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
 
 /**
@@ -42,7 +43,7 @@ public enum Message {
      * @return メッセージ
      */
     @Override
-    public String toString() {
+    public @Nullable String toString() {
         return DiscordConnect.getInstance().getLangData().getProperty(name());
     }
 }
