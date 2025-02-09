@@ -15,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
 import work.novablog.mcplugin.discordconnect.listener.ChatCasterListener;
 import work.novablog.mcplugin.discordconnect.listener.DiscordListener;
-import work.novablog.mcplugin.discordconnect.listener.LunaChatListener;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -60,13 +59,10 @@ public class BotManager implements EventListener {
      */
     public void botShutdown() {
         if (!isActive) return;
-        
+
         ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
-        LunaChatListener lunaChatListener = DiscordConnect.getInstance().getLunaChatListener();
         if (chatCasterListener != null)
             DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(chatCasterListener);
-        if (lunaChatListener != null)
-            DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(lunaChatListener);
         logger.info(Message.normalShutdown.toString());
 
         //プロキシ停止メッセージ
@@ -125,11 +121,8 @@ public class BotManager implements EventListener {
 
 
             ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
-            LunaChatListener lunaChatListener = DiscordConnect.getInstance().getLunaChatListener();
             if (chatCasterListener != null)
                 DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), chatCasterListener);
-            if (lunaChatListener != null)
-                DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), lunaChatListener);
             updateGameName(
                     DiscordConnect.getInstance().getProxy().getPlayers().size(),
                     DiscordConnect.getInstance().getProxy().getConfig().getPlayerLimit()

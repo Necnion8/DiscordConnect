@@ -1,5 +1,6 @@
 package work.novablog.mcplugin.discordconnect;
 
+import com.github.ucchyocean.lc3.LunaChatAPI;
 import com.github.ucchyocean.lc3.LunaChatBungee;
 import com.gmail.necnionch.myplugin.n8chatcaster.bungee.N8ChatCasterAPI;
 import com.gmail.necnionch.myplugin.n8chatcaster.bungee.N8ChatCasterPlugin;
@@ -36,7 +37,7 @@ public final class DiscordConnect extends Plugin {
     private N8ChatCasterAPI chatCasterAPI;
     private ChatCasterListener chatCasterListener;
 
-    private LunaChatBungee lunaChat;
+    private LunaChatAPI lunaChatAPI;
     private LunaChatListener lunaChatListener;
 
     /**
@@ -84,24 +85,6 @@ public final class DiscordConnect extends Plugin {
         return chatCasterListener;
     }
 
-    /**
-     * LunaChatを返す
-     *
-     * @return lunaChat
-     */
-    public LunaChatBungee getLunaChat() {
-        return lunaChat;
-    }
-
-    /**
-     * LunaChatListenerを返す
-     *
-     * @return lunaChatListener
-     */
-    public LunaChatListener getLunaChatListener() {
-        return lunaChatListener;
-    }
-
     @Override
     public void onEnable() {
         instance = this;
@@ -119,8 +102,7 @@ public final class DiscordConnect extends Plugin {
         //LunaChatと連携
         temp = getProxy().getPluginManager().getPlugin("LunaChat");
         if (temp instanceof LunaChatBungee) {
-            lunaChat = (LunaChatBungee) temp;
-            lunaChatListener = new LunaChatListener();
+            lunaChatAPI = ((LunaChatBungee) temp).getLunaChatAPI();
         }
 
         //configの読み込み
@@ -132,7 +114,9 @@ public final class DiscordConnect extends Plugin {
 
     public void loadConfig() {
         if (botManager != null) {
-            getProxy().getPluginManager().unregisterListener(bungeeListener);
+            if (bungeeListener != null) getProxy().getPluginManager().unregisterListener(bungeeListener);
+            if (lunaChatListener != null) getProxy().getPluginManager().unregisterListener(lunaChatListener);
+
             botManager.sendMessageToChatChannel(
                     Message.serverActivity.toString(),
                     null,
@@ -244,14 +228,13 @@ public final class DiscordConnect extends Plugin {
         String toMinecraftFormat = pluginConfiguration.getString("toMinecraftFormat");
         String toDiscordFormat = pluginConfiguration.getString("toDiscordFormat");
         List<String> hiddenServers = pluginConfiguration.getStringList("hiddenServers");
-        String japanizeFormat = pluginConfiguration.getString("japanizeFormat");
-        if (lunaChatListener != null) {
-            lunaChatListener.setToDiscordFormat(toDiscordFormat);
-            lunaChatListener.setJapanizeFormat(japanizeFormat);
-        }
         botManager = new BotManager(getLogger(), token, chatChannelIds, playingGameName, prefix, toMinecraftFormat);
         bungeeListener = new BungeeListener(botManager, toDiscordFormat, hiddenServers);
         getProxy().getPluginManager().registerListener(this, bungeeListener);
+        if (lunaChatAPI != null) {
+            lunaChatListener = new LunaChatListener(botManager, toDiscordFormat);
+            getProxy().getPluginManager().registerListener(this, lunaChatListener);
+        }
 
         // アップデートチェック
         boolean updateCheck = pluginConfiguration.getBoolean("updateCheck");
