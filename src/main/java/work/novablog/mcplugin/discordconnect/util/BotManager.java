@@ -60,8 +60,7 @@ public class BotManager implements EventListener {
      */
     public void botShutdown() {
         if (!isActive) return;
-
-        DiscordConnect.getInstance().getProxy().getPluginManager().unregisterListener(DiscordConnect.getInstance().getBungeeListener());
+        
         ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
         LunaChatListener lunaChatListener = DiscordConnect.getInstance().getLunaChatListener();
         if (chatCasterListener != null)
@@ -124,7 +123,7 @@ public class BotManager implements EventListener {
                 chatChannelSenders.add(sender);
             }
 
-            DiscordConnect.getInstance().getProxy().getPluginManager().registerListener(DiscordConnect.getInstance(), DiscordConnect.getInstance().getBungeeListener());
+
             ChatCasterListener chatCasterListener = DiscordConnect.getInstance().getChatCasterListener();
             LunaChatListener lunaChatListener = DiscordConnect.getInstance().getLunaChatListener();
             if (chatCasterListener != null)

@@ -67,15 +67,6 @@ public final class DiscordConnect extends Plugin {
     }
 
     /**
-     * BungeeListenerを返す
-     *
-     * @return BungeeListener
-     */
-    public BungeeListener getBungeeListener() {
-        return bungeeListener;
-    }
-
-    /**
      * ChatCasterAPIを返す
      *
      * @return chatCasterAPI
@@ -141,6 +132,7 @@ public final class DiscordConnect extends Plugin {
 
     public void loadConfig() {
         if (botManager != null) {
+            getProxy().getPluginManager().unregisterListener(bungeeListener);
             botManager.sendMessageToChatChannel(
                     Message.serverActivity.toString(),
                     null,
@@ -259,6 +251,7 @@ public final class DiscordConnect extends Plugin {
         }
         botManager = new BotManager(getLogger(), token, chatChannelIds, playingGameName, prefix, toMinecraftFormat);
         bungeeListener = new BungeeListener(botManager, toDiscordFormat, hiddenServers);
+        getProxy().getPluginManager().registerListener(this, bungeeListener);
 
         // アップデートチェック
         boolean updateCheck = pluginConfiguration.getBoolean("updateCheck");

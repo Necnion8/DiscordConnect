@@ -60,7 +60,7 @@ public class BungeeListener implements Listener {
         String convertedMessage = MarkdownConverter.toDiscordMessage(components);
         botManager.sendMessageToChatChannel(
                 toDiscordFormat.replace("{server}", server.getInfo().getName())
-                        .replace("{sender}", sender.getName())
+                        .replace("{sender}", sender.getDisplayName())
                         .replace("{original}", convertedMessage)
         );
     }
