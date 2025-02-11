@@ -2,74 +2,86 @@ package work.novablog.mcplugin.discordconnect.util;
 
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayDeque;
-import java.util.Queue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * Discordのテキストチャンネルにキューのメッセージを送信する
+ * レート制限があるためテキストをまとめて送信する
+ * {@link Thread#interrupt()}で終了するが、キューに残っているメッセージはすべて送信される
+ */
 public class DiscordSender extends Thread {
     private final TextChannel channel;
-    private final Queue<Object> queue = new ArrayDeque<>();
-    private boolean isStopped = false;
+    private final BlockingQueue<Object> queue;
 
-    public DiscordSender(TextChannel channel) {
+    /**
+     * {@code channel}を担当するDiscordSenderを作成する
+     * {@link Thread#start()}でメッセージを送信し始める
+     *
+     * @param channel 送信先のテキストチャンネル
+     */
+    public DiscordSender(@NotNull TextChannel channel) {
         this.channel = channel;
+        queue = new LinkedBlockingQueue<>();
     }
 
     /**
-     * キューに送信するメッセージを追加する
+     * キューに送信するテキストメッセージを追加する
+     * interruptedの場合は追加されない
+     * メッセージは非同期で送信される
      *
-     * @param text 送信するメッセージ
+     * @param text 送信するテキストメッセージ
+     * @return キューに追加されたか
      */
-    public void addQueue(String text) {
-        if (text.equals("")) return;
-        queue.add(text);
+    public boolean addQueue(@NotNull String text) {
+        if (isInterrupted()) return false;
+        else return queue.add(text);
     }
 
     /**
      * キューに送信する埋め込みメッセージを追加する
+     * interruptedの場合は追加されない
+     * メッセージは非同期で送信される
      *
      * @param embed 送信する埋め込みメッセージ
+     * @return キューに追加されたか
      */
-    public void addQueue(MessageEmbed embed) {
-        queue.add(embed);
-    }
-
-    /**
-     * スレッドを停止する
-     */
-    public void threadStop() {
-        isStopped = true;
+    public boolean addQueue(@NotNull MessageEmbed embed) {
+        if (isInterrupted()) return false;
+        else return queue.add(embed);
     }
 
     @Override
     public void run() {
-        while (!isStopped || !queue.isEmpty()) {
-            StringBuilder messages = new StringBuilder();
+        Object queued = null;
 
-            //キューを読む（文字）
-            while (!queue.isEmpty() && queue.peek() instanceof String) {
-                messages.append(queue.poll()).append("\n");
-            }
-
-            if (!messages.toString().equals("")) {
-                //制限が2000文字なので1900文字で区切る
-                Matcher m = Pattern.compile("[\\s\\S]{1,1900}").matcher(messages.toString());
-                while (m.find()) {
-                    channel.sendMessage(m.group()).complete();
+        while (true) {
+            if (queued == null) {
+                try {
+                    queued = queue.take();
+                } catch (InterruptedException e) {
+                    if (queue.isEmpty()) break;
+                    queued = queue.poll();
+                    Thread.currentThread().interrupt();
                 }
             }
 
-            //キューを読む（埋め込み）
-            while (!queue.isEmpty() && queue.peek() instanceof MessageEmbed) {
-                channel.sendMessageEmbeds((MessageEmbed) queue.poll()).complete();
+            //キューを読む（テキスト）
+            StringBuilder messages = new StringBuilder();
+            for (; queued instanceof String; queued = queue.poll()) {
+                if (messages.length() + ((String) queued).length() > 1900) break;  // 2000文字制限
+                messages.append((String) queued).append("\n");
             }
 
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (!messages.toString().isEmpty()) {
+                channel.sendMessage(messages).complete();
+            }
+
+            //キューを読む（埋め込み）
+            for (; queued instanceof MessageEmbed; queued = queue.poll()) {
+                channel.sendMessageEmbeds((MessageEmbed) queued).complete();
             }
         }
     }
