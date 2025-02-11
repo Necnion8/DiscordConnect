@@ -19,6 +19,7 @@ import work.novablog.mcplugin.discordconnect.listener.DiscordListener;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -91,7 +92,7 @@ public class BotManager implements EventListener {
             try {
                 sender.join();
             } catch (InterruptedException e) {
-                logger.warning(e.getMessage());
+                logger.log(Level.SEVERE, "Exception", e);
             }
         });
 

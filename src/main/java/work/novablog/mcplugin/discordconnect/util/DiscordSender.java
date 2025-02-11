@@ -64,6 +64,7 @@ public class DiscordSender extends Thread {
                 } catch (InterruptedException e) {
                     if (queue.isEmpty()) break;
                     queued = queue.poll();
+                    Thread.currentThread().interrupt();
                 }
             }
 
