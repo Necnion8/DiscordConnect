@@ -18,26 +18,32 @@ import work.novablog.mcplugin.discordconnect.util.GithubAPI;
 import work.novablog.mcplugin.discordconnect.util.Message;
 
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.*;
+import java.util.Locale;
+import java.util.Properties;
+import java.util.logging.Level;
 
 public final class DiscordConnect extends Plugin {
     private static final int CONFIG_LATEST = 4;
-    private static final String pluginDownloadLink = "https://github.com/nova-27/DiscordConnect/releases";
+    private static final String PLUGIN_DOWNLOAD_LINK = "https://github.com/nova-27/DiscordConnect/releases";
 
     private static DiscordConnect instance;
-    private BotManager botManager;
-    private Properties langData;
-    private BungeeListener bungeeListener;
-
     private N8ChatCasterAPI chatCasterAPI;
-    private ChatCasterListener chatCasterListener;
-
     private LunaChatAPI lunaChatAPI;
+    private Properties langData;
+
+    private BotManager botManager;
+    private BungeeListener bungeeListener;
     private LunaChatListener lunaChatListener;
+    private ChatCasterListener chatCasterListener;
 
     /**
      * インスタンスを返す
@@ -49,21 +55,20 @@ public final class DiscordConnect extends Plugin {
     }
 
     /**
-     * Botマネージャーを返す
-     *
-     * @return botマネージャー
-     */
-    public BotManager getBotManager() {
-        return botManager;
-    }
-
-    /**
      * 言語データを返す
      *
      * @return 言語データ
      */
     public Properties getLangData() {
         return langData;
+    }
+
+    /**
+     * configを読み直してbotを再起動する
+     */
+    public void reload() {
+        shutdown();
+        setup();
     }
 
     @Override
@@ -85,129 +90,33 @@ public final class DiscordConnect extends Plugin {
             lunaChatAPI = ((LunaChatBungee) temp).getLunaChatAPI();
         }
 
-        //configの読み込み
-        loadConfig();
+        setup();
 
         //コマンドの追加
         getProxy().getPluginManager().registerCommand(this, new BungeeCommand());
     }
 
-    public void loadConfig() {
-        if (botManager != null) {
-            if (bungeeListener != null) getProxy().getPluginManager().unregisterListener(bungeeListener);
-            if (lunaChatListener != null) getProxy().getPluginManager().unregisterListener(lunaChatListener);
-            if (chatCasterListener != null) getProxy().getPluginManager().unregisterListener(chatCasterListener);
+    @Override
+    public void onDisable() {
+        shutdown();
+    }
 
-            botManager.sendMessageToChatChannel(
-                    Message.serverActivity.toString(),
-                    null,
-                    Message.botRestarting.toString(),
-                    new Color(102, 205, 170),
-                    new ArrayList<>(),
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-            );
-            botManager.botShutdown();
-            botManager = null;
-        }
-
-        //設定フォルダ
-        if (!getDataFolder().exists()) {
-            getDataFolder().mkdir();
-        }
-
-        //言語ファイル
-        File languageFile = new File(getDataFolder(), "message.yml");
-        if (!languageFile.exists()) {
-            //存在しなければコピー
-            InputStream src = getResourceAsStream(Locale.getDefault().toString() + ".properties");
-            if (src == null) src = getResourceAsStream("ja_JP.properties");
-
-            try {
-                Files.copy(src, languageFile.toPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        //Messageの準備
+    private void setup() {
+        Configuration config;
         try {
-            InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(languageFile), StandardCharsets.UTF_8);
-            BufferedReader bufferedReader = new BufferedReader(Objects.requireNonNull(inputStreamReader));
-            langData = new Properties();
-            langData.load(bufferedReader);
+            config = loadConfig();
         } catch (IOException e) {
-            e.printStackTrace();
+            getLogger().log(Level.SEVERE, "Exception", e);
+            return;
         }
 
-        //configファイル
-        File pluginConfig = new File(getDataFolder(), "config.yml");
-        if (!pluginConfig.exists()) {
-            //存在しなければコピー
-            InputStream src = getResourceAsStream("config.yml");
+        String token = config.getString("token");
+        List<Long> chatChannelIds = config.getLongList("chatChannelIDs");
+        String playingGameName = config.getString("playingGameName");
+        String toMinecraftFormat = config.getString("toMinecraftFormat");
+        String toDiscordFormat = config.getString("toDiscordFormat");
+        List<String> hiddenServers = config.getStringList("hiddenServers");
 
-            try {
-                Files.copy(src, pluginConfig.toPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        //config取得・bot起動
-        Configuration pluginConfiguration = null;
-        try {
-            pluginConfiguration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(pluginConfig);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        int configVersion = pluginConfiguration.getInt("configVersion", 0);
-        //configが古ければ新しいconfigをコピー
-        if (configVersion < CONFIG_LATEST) {
-            try {
-                //古いconfigをリネーム
-                File old_config = new File(getDataFolder(), "config_old.yml");
-                Files.deleteIfExists(old_config.toPath());
-                pluginConfig.renameTo(old_config);
-
-                //新しいconfigをコピー
-                pluginConfig = new File(getDataFolder(), "config.yml");
-                InputStream src = getResourceAsStream("config.yml");
-                Files.copy(src, pluginConfig.toPath());
-                pluginConfiguration = ConfigurationProvider.getProvider(YamlConfiguration.class).load(pluginConfig);
-
-                //古いlangファイルをリネーム
-                File old_lang = new File(getDataFolder(), "message_old.yml");
-                Files.deleteIfExists(old_lang.toPath());
-                languageFile.renameTo(old_lang);
-
-                //新しいlangファイルをコピー
-                languageFile = new File(getDataFolder(), "message.yml");
-                src = getResourceAsStream(Locale.getDefault().toString() + ".properties");
-                if (src == null) src = getResourceAsStream("ja_JP.properties");
-                Files.copy(src, languageFile.toPath());
-                InputStreamReader inputStreamReader = new InputStreamReader(new FileInputStream(languageFile), StandardCharsets.UTF_8);
-                BufferedReader bufferedReader = new BufferedReader(Objects.requireNonNull(inputStreamReader));
-                langData = new Properties();
-                langData.load(bufferedReader);
-
-                DiscordConnect.getInstance().getLogger().info(Message.configIsOld.toString());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        String token = pluginConfiguration.getString("token");
-        List<Long> chatChannelIds = pluginConfiguration.getLongList("chatChannelIDs");
-        String playingGameName = pluginConfiguration.getString("playingGameName");
-        String toMinecraftFormat = pluginConfiguration.getString("toMinecraftFormat");
-        String toDiscordFormat = pluginConfiguration.getString("toDiscordFormat");
-        List<String> hiddenServers = pluginConfiguration.getStringList("hiddenServers");
         botManager = new BotManager(getLogger(), token, chatChannelIds, playingGameName, toMinecraftFormat);
         bungeeListener = new BungeeListener(botManager, toDiscordFormat, hiddenServers);
         getProxy().getPluginManager().registerListener(this, bungeeListener);
@@ -221,7 +130,7 @@ public final class DiscordConnect extends Plugin {
         }
 
         // アップデートチェック
-        boolean updateCheck = pluginConfiguration.getBoolean("updateCheck");
+        boolean updateCheck = config.getBoolean("updateCheck");
         String currentVer = getDescription().getVersion();
         String latestVer = GithubAPI.getLatestVersionNum();
         if (updateCheck) {
@@ -245,14 +154,98 @@ public final class DiscordConnect extends Plugin {
                 );
                 getLogger().info(
                         Message.updateDownloadLink.toString()
-                                .replace("{link}", pluginDownloadLink)
+                                .replace("{link}", PLUGIN_DOWNLOAD_LINK)
                 );
             }
         }
     }
 
-    @Override
-    public void onDisable() {
+    private void shutdown() {
+        if (bungeeListener != null) getProxy().getPluginManager().unregisterListener(bungeeListener);
+        if (lunaChatListener != null) getProxy().getPluginManager().unregisterListener(lunaChatListener);
+        if (chatCasterListener != null) getProxy().getPluginManager().unregisterListener(chatCasterListener);
+
+        botManager.sendMessageToChatChannel(
+                Message.serverActivity.toString(),
+                null,
+                Message.botRestarting.toString(),
+                new Color(102, 205, 170),
+                new ArrayList<>(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
         botManager.botShutdown();
+        botManager = null;
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private Configuration loadConfig() throws IOException {
+        //設定フォルダ
+        getDataFolder().mkdir();
+
+        //言語ファイル
+        File langFile = new File(getDataFolder(), "message.yml");
+        if (!langFile.exists()) {
+            //存在しなければコピー
+            InputStream src = getResourceAsStream(Locale.getDefault().toString() + ".properties");
+            if (src == null) src = getResourceAsStream("ja_JP.properties");
+            Files.copy(src, langFile.toPath());
+        }
+
+        langData = new Properties();
+        try (InputStreamReader reader = new InputStreamReader(
+                Files.newInputStream(langFile.toPath()),
+                StandardCharsets.UTF_8)
+        ) {
+            langData.load(reader);
+        }
+
+        //configファイル
+        File configFile = new File(getDataFolder(), "config.yml");
+        if (!configFile.exists()) {
+            //存在しなければコピー
+            InputStream src = getResourceAsStream("config.yml");
+            Files.copy(src, configFile.toPath());
+        }
+
+        Configuration config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(configFile);
+
+        //configが古ければ新しいconfigをコピー
+        int configVersion = config.getInt("configVersion", 0);
+        if (configVersion < CONFIG_LATEST) {
+            //古いlangをバックアップ
+            File oldLangFile = new File(getDataFolder(), "message_old.yml");
+            Files.move(langFile.toPath(), oldLangFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            //新しいlangファイルをコピー
+            langFile = new File(getDataFolder(), "message.yml");
+            InputStream src = getResourceAsStream(Locale.getDefault().toString() + ".properties");
+            if (src == null) src = getResourceAsStream("ja_JP.properties");
+            Files.copy(src, langFile.toPath());
+            try (InputStreamReader reader = new InputStreamReader(
+                    Files.newInputStream(langFile.toPath()),
+                    StandardCharsets.UTF_8)
+            ) {
+                langData.load(reader);
+            }
+
+            //古いconfigをバックアップ
+            File oldConfigFile = new File(getDataFolder(), "config_old.yml");
+            Files.move(configFile.toPath(), oldConfigFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            //新しいconfigをコピー
+            src = getResourceAsStream("config.yml");
+            Files.copy(src, configFile.toPath());
+            config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(configFile);
+
+            getLogger().info(Message.configIsOld.toString());
+        }
+
+        return config;
     }
 }

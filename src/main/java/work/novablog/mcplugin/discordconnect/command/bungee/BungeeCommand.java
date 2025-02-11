@@ -28,7 +28,7 @@ public class BungeeCommand extends CompositeCommand {
         Command reloadCommand = new Command("reload", RELOAD_PERM) {
             @Override
             public void execute(CommandSender sender, String[] args) {
-                DiscordConnect.getInstance().loadConfig();
+                DiscordConnect.getInstance().reload();
                 sender.sendMessage(TextComponent.fromLegacyText(Message.configReloaded.toString()));
             }
         };
