@@ -67,6 +67,21 @@ public final class DiscordConnect extends Plugin {
      * configを読み直してbotを再起動する
      */
     public void reload() {
+        botManager.sendMessageToChatChannel(
+                Message.serverActivity.toString(),
+                null,
+                Message.botRestarting.toString(),
+                new Color(102, 205, 170),
+                new ArrayList<>(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
         shutdown();
         setup();
     }
@@ -164,21 +179,6 @@ public final class DiscordConnect extends Plugin {
         if (bungeeListener != null) getProxy().getPluginManager().unregisterListener(bungeeListener);
         if (lunaChatListener != null) getProxy().getPluginManager().unregisterListener(lunaChatListener);
         if (chatCasterListener != null) getProxy().getPluginManager().unregisterListener(chatCasterListener);
-
-        botManager.sendMessageToChatChannel(
-                Message.serverActivity.toString(),
-                null,
-                Message.botRestarting.toString(),
-                new Color(102, 205, 170),
-                new ArrayList<>(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
         botManager.botShutdown();
         botManager = null;
     }
