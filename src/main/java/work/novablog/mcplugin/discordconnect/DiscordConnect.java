@@ -32,7 +32,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 public final class DiscordConnect extends Plugin {
-    private static final int CONFIG_LATEST = 4;
+    private static final int CONFIG_LATEST = 5;
     private static final String PLUGIN_DOWNLOAD_LINK = "https://github.com/nova-27/DiscordConnect/releases";
 
     private static DiscordConnect instance;
