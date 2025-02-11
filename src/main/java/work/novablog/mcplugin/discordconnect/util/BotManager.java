@@ -28,9 +28,9 @@ import java.util.logging.Logger;
 public class BotManager implements EventListener {
     private final Logger logger;
     private JDA bot;
-    private List<Long> chatChannelIds;
-    private List<DiscordSender> chatChannelSenders;
-    private String playingGameName;
+    private final List<Long> chatChannelIds;
+    private final List<DiscordSender> chatChannelSenders;
+    private final String playingGameName;
 
     private boolean isActive;
 
@@ -53,7 +53,6 @@ public class BotManager implements EventListener {
             this.logger.severe(Message.invalidToken.toString());
             bot = null;
             isActive = false;
-            return;
         }
 
         this.chatChannelIds = chatChannelIds;
@@ -100,8 +99,7 @@ public class BotManager implements EventListener {
         bot.shutdown();
 
         bot = null;
-        chatChannelSenders = null;
-        chatChannelIds = null;
+        chatChannelSenders.clear();
         isActive = false;
     }
 
@@ -208,6 +206,8 @@ public class BotManager implements EventListener {
      * @param maxPlayers  最大プレイヤー数
      */
     public void updateGameName(int playerCount, int maxPlayers) {
+        if (!isActive) return;
+
         String maxPlayersString = maxPlayers != -1 ? String.valueOf(maxPlayers) : "∞";
 
         bot.getPresence().setActivity(
