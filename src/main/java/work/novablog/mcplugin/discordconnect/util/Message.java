@@ -22,7 +22,6 @@ public enum Message {
 
     bungeeCommandDenied,
     bungeeCommandNotFound,
-    bungeeCommandSyntaxError,
 
     bungeeCommandHelpLine1,
     bungeeCommandHelpHelpcmd,

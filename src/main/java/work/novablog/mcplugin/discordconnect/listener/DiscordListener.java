@@ -43,7 +43,7 @@ public class DiscordListener extends ListenerAdapter {
 
         // 添付ファイル
         TextComponent[] attachments = event.getMessage().getAttachments().stream().map((attachment) -> {
-            TextComponent url = new TextComponent(" [" + attachment.getFileName() + "]");
+            TextComponent url = new TextComponent(" §9§n[" + attachment.getFileName() + "]§r");
             url.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl()));
             return url;
         }).toArray(TextComponent[]::new);
