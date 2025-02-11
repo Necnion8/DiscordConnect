@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BungeeListener implements Listener {
-    private static final String AVATAR_IMG_URL = "https://crafatar.com/avatars/{uuid}?size=512&default=MHF_Steve&overlay";
+    private static final String AVATAR_IMG_URL = "https://mc-heads.net/avatar/{uuid}";
     private final BotManager botManager;
     private final String toDiscordFormat;
     private final List<String> hiddenServers;
@@ -79,7 +79,10 @@ public class BungeeListener implements Listener {
                 null,
                 null,
                 null,
-                AVATAR_IMG_URL.replace("{uuid}", e.getConnection().getUniqueId().toString().replace("-", ""))
+                AVATAR_IMG_URL.replace(
+                        "{uuid}",
+                        e.getConnection().getUniqueId().toString().replace("-", "")
+                )
         );
 
         updatePlayerCount();
@@ -99,7 +102,10 @@ public class BungeeListener implements Listener {
                 null,
                 null,
                 null,
-                AVATAR_IMG_URL.replace("{uuid}", e.getPlayer().getUniqueId().toString().replace("-", ""))
+                AVATAR_IMG_URL.replace(
+                        "{uuid}",
+                        e.getPlayer().getUniqueId().toString().replace("-", "")
+                )
         );
 
         updatePlayerCount();
@@ -112,7 +118,9 @@ public class BungeeListener implements Listener {
         botManager.sendMessageToChatChannel(
                 Message.userActivity.toString(),
                 null,
-                Message.serverSwitched.toString().replace("{name}", e.getPlayer().getName()).replace("{server}", e.getPlayer().getServer().getInfo().getName()),
+                Message.serverSwitched.toString()
+                        .replace("{name}", e.getPlayer().getName())
+                        .replace("{server}", e.getPlayer().getServer().getInfo().getName()),
                 Color.CYAN,
                 new ArrayList<>(),
                 null,
@@ -121,7 +129,10 @@ public class BungeeListener implements Listener {
                 null,
                 null,
                 null,
-                AVATAR_IMG_URL.replace("{uuid}", e.getPlayer().getUniqueId().toString().replace("-", ""))
+                AVATAR_IMG_URL.replace(
+                        "{uuid}",
+                        e.getPlayer().getUniqueId().toString().replace("-", "")
+                )
         );
     }
 
