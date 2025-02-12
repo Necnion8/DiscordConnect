@@ -36,6 +36,12 @@ shadowJar {
     relocate 'org.bstats', 'work.novablog.mcplugin.discordconnect.util'
 }
 
+task printVersion {
+    doLast {
+        println version
+    }
+}
+
 group = 'work.novablog.mcplugin'
 version = '2.4'
 java.sourceCompatibility = JavaVersion.VERSION_1_8
