@@ -29,7 +29,7 @@ public class LunaChatListener implements Listener {
     public void onLunaChatMessage(LunaChatBungeeChannelMessageEvent event) {
         if (!event.getChannel().isGlobalChannel()) return;
 
-        MarkComponent[] components = MarkdownConverter.fromMinecraftMessage(event.getMessage(), '&');
+        MarkComponent[] components = MarkdownConverter.fromMinecraftMessage(event.getMessage(), '§');
         String convertedMessage = MarkdownConverter.toDiscordMessage(components);
 
         botManager.sendMessageToChatChannel(
