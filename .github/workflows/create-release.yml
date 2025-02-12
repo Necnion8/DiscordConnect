@@ -1,17 +1,17 @@
-name: Create Draft Release
+name: Create release
 
 on:
   pull_request:
     branches:
       - main
-    types:
-      - opened
+    types: [ closed ]
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true  # マージ時のみ
     uses: ./.github/workflows/build.yml
 
-  create-draft-release:
+  create-release:
     runs-on: ubuntu-latest
     needs: build
 
@@ -21,16 +21,11 @@ jobs:
         with:
           name: DiscordConnect
 
-      - name: Get version from build.gradle
-        run: |
-          echo $(./gradlew -q printVersion) >> $GITHUB_ENV
-
-      - name: Create GitHub Draft Release
+      - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.event.pull_request.title }}
-          tag_name: ${{ env.VERSION }}
+          tag_name: ${{ needs.build.outputs.version }}
           body: ${{ github.event.pull_request.body }}
           files: "*.jar"
-          draft: true
           fail_on_unmatched_files: true
