@@ -6,60 +6,57 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.jetbrains.annotations.NotNull;
-import work.novablog.mcplugin.discordconnect.DiscordConnect;
 
-import java.util.regex.Pattern;
+import java.util.List;
 
 public class DiscordListener extends ListenerAdapter {
-    private final String prefix;
+    private final List<Long> chatChannelIds;
     private final String toMinecraftFormat;
 
-    public DiscordListener(String prefix, String toMinecraftFormat) {
-        this.prefix = prefix;
+    public DiscordListener(@NotNull List<Long> chatChannelIds, @NotNull String toMinecraftFormat) {
+        this.chatChannelIds = chatChannelIds;
         this.toMinecraftFormat = toMinecraftFormat;
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent message) {
-        if(message.getAuthor().isBot()) return;
-        if(!DiscordConnect.getInstance().getBotManager().getChatChannelIds().contains(message.getChannel().getIdLong())) return;
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+        if (event.getAuthor().isBot()) return;
+        if (!chatChannelIds.contains(event.getChannel().getIdLong()))
+            return;
 
-        if (message.getMessage().getContentRaw().startsWith(prefix)) {
-            //コマンド TODO
-            String command = message.getMessage().getContentRaw().replace(prefix, "").split("\\s+")[0];
-            String[] args = message.getMessage().getContentRaw().replaceAll(Pattern.quote(prefix + command) + "\\s*", "").split("\\s+");
-            if(args[0].equals("")) {
-                args = new String[0];
-            }
+        String[] parts = toMinecraftFormat
+                .replace("{name}", event.getAuthor().getName())
+                .replace("{channel_name}", event.getChannel().getName())
+                .split("\\{message}", -1);
 
-            //DiscordConnect.getInstance().embed(Color.RED, "coming soon...", null);
-        } else {
-            //メッセージ
-            if(!message.getMessage().getContentRaw().equals("")) {
-                MarkComponent[] components = MarkdownConverter.fromDiscordMessage(message.getMessage().getContentRaw());
-                TextComponent[] convertedMessage = MarkdownConverter.toMinecraftMessage(components);
+        ComponentBuilder messageBuilder = new ComponentBuilder();
+        messageBuilder.append(TextComponent.fromLegacyText(parts[0]));
 
-                TextComponent[] send = new TextComponent[convertedMessage.length + 1];
-                send[0] = new TextComponent(toMinecraftFormat.replace("{name}", message.getAuthor().getName()).replace("{channel_name}", message.getChannel().getName()));
-                System.arraycopy(convertedMessage, 0, send, 1, convertedMessage.length);
+        // テキストメッセージ
+        MarkComponent[] markComponents = MarkdownConverter.fromDiscordMessage(
+                event.getMessage().getContentDisplay()
+        );
+        TextComponent[] convertedMessage = MarkdownConverter.toMinecraftMessage(markComponents);
 
-                ProxyServer.getInstance().broadcast(send);
-            }
+        // 添付ファイル
+        TextComponent[] attachments = event.getMessage().getAttachments().stream().map((attachment) -> {
+            TextComponent url = new TextComponent(" §9§n[" + attachment.getFileName() + "]§r");
+            url.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl()));
+            return url;
+        }).toArray(TextComponent[]::new);
 
-            message.getMessage().getAttachments().forEach((attachment) -> {
-                TextComponent url = new TextComponent(attachment.getUrl());
-                url.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, attachment.getUrl()));
-                ProxyServer.getInstance().broadcast(
-                        new TextComponent(
-                                toMinecraftFormat
-                                        .replace("{name}", message.getAuthor().getName())
-                                        .replace("{channel_name}", message.getChannel().getName())
-                        ),
-                        url
-                );
-            });
+        // partsの間にテキストメッセージと添付ファイルを挿入
+        for (int i = 1; i < parts.length; i++) {
+            if (convertedMessage.length != 0)
+                messageBuilder.append(convertedMessage, ComponentBuilder.FormatRetention.NONE);
+            if (attachments.length != 0)
+                messageBuilder.append(attachments, ComponentBuilder.FormatRetention.NONE);
+            messageBuilder.append(TextComponent.fromLegacyText(parts[i]), ComponentBuilder.FormatRetention.NONE);
         }
+
+        ProxyServer.getInstance().broadcast(messageBuilder.create());
     }
 }

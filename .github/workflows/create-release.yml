@@ -1,0 +1,31 @@
+name: Create release
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [ closed ]
+
+jobs:
+  build:
+    if: github.event.pull_request.merged == true  # マージ時のみ
+    uses: ./.github/workflows/build.yml
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: DiscordConnect
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.event.pull_request.title }}
+          tag_name: ${{ needs.build.outputs.version }}
+          body: ${{ github.event.pull_request.body }}
+          files: "*.jar"
+          fail_on_unmatched_files: true

@@ -1,5 +1,6 @@
 package work.novablog.mcplugin.discordconnect.util;
 
+import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.DiscordConnect;
 
 /**
@@ -7,11 +8,10 @@ import work.novablog.mcplugin.discordconnect.DiscordConnect;
  */
 public enum Message {
     invalidToken,
-    mainChannelNotFound,
-    shutdownDueToError,
+    channelNotFound,
     normalShutdown,
     botIsReady,
-    botRestarted,
+    botRestarting,
     configReloaded,
     configIsOld,
 
@@ -22,7 +22,6 @@ public enum Message {
 
     bungeeCommandDenied,
     bungeeCommandNotFound,
-    bungeeCommandSyntaxError,
 
     bungeeCommandHelpLine1,
     bungeeCommandHelpHelpcmd,
@@ -39,10 +38,14 @@ public enum Message {
 
     /**
      * propertiesファイルからメッセージを取ってくる
+     *
      * @return メッセージ
      */
     @Override
-    public String toString() {
-        return DiscordConnect.getInstance().getLangData().getProperty(name());
+    public @NotNull String toString() {
+        return DiscordConnect.getInstance().getLangData().getProperty(
+                name(),
+                "Message not found: " + name()
+        );
     }
 }

@@ -1,15 +1,14 @@
 token: xxxx
 chatChannelIDs:
-- 000000000000000000
+  - 000000000000000000
 playingGameName: サーバー稼働中！（{players}/{max}人）
 
-prefix: "!"
-toMinecraftFormat: "§9[Discord§7({channel_name})§9] §f<{name}>"
-toDiscordFormat: "*({server})* **{sender}** : {original}"
+toMinecraftFormat: "§9[Discord§7({channel_name})§9] §f<{name}> {message}"
+toDiscordFormat: "*({server})* **{sender}** : {message}"
+
+hiddenServers:
+  - test
+
 updateCheck: true
-
-# LunaChat使用時にのみ有効 (Only when using the LunaChat plugin)
-japanizeFormat: "*({server})* **{sender}** : {original} ({japanized})"
-
 # この値は変更しないでください！ (Don't change the value!)
-configVersion: 4
+configVersion: 5

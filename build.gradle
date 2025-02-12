@@ -1,28 +1,26 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'com.gradleup.shadow' version '9.0.0-beta7'
 }
 
 repositories {
     mavenCentral()
     maven {
-        name 'm2-dv8tion'
-        url 'https://m2.dv8tion.net/releases'
+        name = 'm2-dv8tion'
+        url = 'https://m2.dv8tion.net/releases'
     }
     maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots"
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 
 dependencies {
-    compileOnly('net.md-5:bungeecord-api:1.18-R0.1-SNAPSHOT')
-    implementation("net.dv8tion:JDA:5.0.0-alpha.3") {
+    compileOnly('net.md-5:bungeecord-api:1.19-R0.1-SNAPSHOT')
+    implementation('net.dv8tion:JDA:5.3.0') {
         exclude module: 'opus-java'
     }
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.13.1'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
-    implementation 'com.fasterxml.jackson.core:jackson-annotations:2.13.1'
-    implementation('org.bstats:bstats-bungeecord:2.2.1')
+    implementation('com.fasterxml.jackson.core:jackson-databind:2.18.2')
+    implementation('org.bstats:bstats-bungeecord:3.1.0')
     implementation(files('libs/MarkdownConverter-1.1-SNAPSHOT-min.jar'))
     compileOnly(files('libs/N8ChatCaster-dummy.jar'))
     compileOnly(files('libs/LunaChat.jar'))
@@ -38,10 +36,16 @@ shadowJar {
     relocate 'org.bstats', 'work.novablog.mcplugin.discordconnect.util'
 }
 
+tasks.register('printVersion') {
+    doLast {
+        println version
+    }
+}
+
 group = 'work.novablog.mcplugin'
-version = '2.4'
+version = '2.5'
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
