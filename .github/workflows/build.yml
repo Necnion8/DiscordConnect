@@ -5,10 +5,15 @@ on:
     branches-ignore:
       - main
   workflow_call:
+    outputs:
+      version:
+        value: ${{ jobs.build.outputs.version }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -28,6 +33,12 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Get version from build.gradle
+        id: get_version
+        run: |
+          VERSION=$(./gradlew -q printVersion)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build with Gradle
         run: ./gradlew shadowJar
