@@ -1,6 +1,14 @@
 [![download](https://img.shields.io/github/downloads/nova-27/DiscordConnect/total?color=blue)](https://github.com/nova-27/DiscordConnect/releases)
 [![license](https://img.shields.io/github/license/nova-27/DiscordConnect?color=b8b8b8)](https://github.com/nova-27/DiscordConnect/blob/master/LICENSE)
 
+# Velocity fork
+このプラグインはVelocityへ非公式に移植されたフォークです。自己責任で使用してください。  
+
+Velocity版 LunaChat との連携は以下のフォークに対応しています
+- [LunaChat-velocity by yukieiji](https://github.com/yukieiji/LunaChat-velocity)
+
+
+
 # DiscordConnect
 
 このBungeeCordプラグインは、DiscordとMinecraftのチャットを連携します。

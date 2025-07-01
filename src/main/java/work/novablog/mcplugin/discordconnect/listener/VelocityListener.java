@@ -2,16 +2,15 @@ package work.novablog.mcplugin.discordconnect.listener;
 
 import com.gmail.necnionch.myapp.markdownconverter.MarkComponent;
 import com.gmail.necnionch.myapp.markdownconverter.MarkdownConverter;
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.connection.Server;
-import net.md_5.bungee.api.event.ChatEvent;
-import net.md_5.bungee.api.event.LoginEvent;
-import net.md_5.bungee.api.event.PlayerDisconnectEvent;
-import net.md_5.bungee.api.event.ServerSwitchEvent;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.event.EventHandler;
-import net.md_5.bungee.event.EventPriority;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.event.connection.PostLoginEvent;
+import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ProxyServer;
+import com.velocitypowered.api.proxy.ServerConnection;
+import com.velocitypowered.api.proxy.server.ServerInfo;
 import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.event.PreForwardChatToDiscordEvent;
 import work.novablog.mcplugin.discordconnect.util.BotManager;
@@ -21,56 +20,61 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BungeeListener implements Listener {
+public class VelocityListener {
     private static final String AVATAR_IMG_URL = "https://mc-heads.net/avatar/{uuid}";
+    private final @NotNull ProxyServer server;
     private final BotManager botManager;
     private final String toDiscordFormat;
     private final List<String> hiddenServers;
 
-    public BungeeListener(
+    public VelocityListener(
+            @NotNull ProxyServer server,
             @NotNull BotManager botManager,
             @NotNull String toDiscordFormat,
             @NotNull List<String> hiddenServers
     ) {
+        this.server = server;
         this.botManager = botManager;
         this.toDiscordFormat = toDiscordFormat;
         this.hiddenServers = hiddenServers;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onChat(ChatEvent event) {
-        if (event.isCommand() || event.isCancelled() || !(event.getSender() instanceof ProxiedPlayer)) return;
+    @Subscribe  // HIGHEST?
+    public void onChat(PlayerChatEvent event) {
+        if (!event.getResult().isAllowed()) return;
 
-        String serverName = ((ProxiedPlayer) event.getSender()).getServer().getInfo().getName();
+        String serverName = event.getPlayer().getCurrentServer().map(ServerConnection::getServerInfo).map(ServerInfo::getName).orElse("unknown");
         if (hiddenServers.contains(serverName)) return;
 
         PreForwardChatToDiscordEvent preEvent = new PreForwardChatToDiscordEvent(event);
-        ProxyServer.getInstance().getPluginManager().callEvent(preEvent);
+        server.getEventManager().fireAndForget(preEvent);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @Subscribe  // HIGHEST?
     public void onPreForwardChatToDiscord(PreForwardChatToDiscordEvent event) {
         if (event.isCancelled()) return;
 
-        ProxiedPlayer sender = event.getSender();
-        Server server = sender.getServer();
+        Player sender = event.getSender();
+        ServerConnection server = sender.getCurrentServer().orElse(null);
+        if (server == null)
+            return;
         String message = event.getMessage();
 
         MarkComponent[] components = MarkdownConverter.fromMinecraftMessage(message, '&');
         String convertedMessage = MarkdownConverter.toDiscordMessage(components);
         botManager.sendMessageToChatChannel(
-                toDiscordFormat.replace("{server}", server.getInfo().getName())
-                        .replace("{sender}", sender.getDisplayName())
+                toDiscordFormat.replace("{server}", server.getServerInfo().getName())
+                        .replace("{sender}", sender.getUsername())
                         .replace("{message}", convertedMessage)
         );
     }
 
-    @EventHandler
-    public void onLogin(LoginEvent e) {
+    @Subscribe
+    public void onLogin(PostLoginEvent e) {
         botManager.sendMessageToChatChannel(
                 Message.userActivity.toString(),
                 null,
-                Message.joined.toString().replace("{name}", e.getConnection().getName()),
+                Message.joined.toString().replace("{name}", e.getPlayer().getUsername()),
                 Color.GREEN,
                 new ArrayList<>(),
                 null,
@@ -81,19 +85,19 @@ public class BungeeListener implements Listener {
                 null,
                 AVATAR_IMG_URL.replace(
                         "{uuid}",
-                        e.getConnection().getUniqueId().toString().replace("-", "")
+                        e.getPlayer().getUniqueId().toString().replace("-", "")
                 )
         );
 
         updatePlayerCount();
     }
 
-    @EventHandler
-    public void onLogout(PlayerDisconnectEvent e) {
+    @Subscribe
+    public void onLogout(DisconnectEvent e) {
         botManager.sendMessageToChatChannel(
                 Message.userActivity.toString(),
                 null,
-                Message.left.toString().replace("{name}", e.getPlayer().getName()),
+                Message.left.toString().replace("{name}", e.getPlayer().getUsername()),
                 Color.RED,
                 new ArrayList<>(),
                 null,
@@ -111,16 +115,16 @@ public class BungeeListener implements Listener {
         updatePlayerCount();
     }
 
-    @EventHandler
-    public void onSwitch(ServerSwitchEvent e) {
-        if (hiddenServers.contains(e.getPlayer().getServer().getInfo().getName())) return;
+    @Subscribe
+    public void onSwitch(ServerConnectedEvent e) {
+        if (hiddenServers.contains(e.getServer().getServerInfo().getName())) return;
 
         botManager.sendMessageToChatChannel(
                 Message.userActivity.toString(),
                 null,
                 Message.serverSwitched.toString()
-                        .replace("{name}", e.getPlayer().getName())
-                        .replace("{server}", e.getPlayer().getServer().getInfo().getName()),
+                        .replace("{name}", e.getPlayer().getUsername())
+                        .replace("{server}", e.getServer().getServerInfo().getName()),
                 Color.CYAN,
                 new ArrayList<>(),
                 null,
@@ -141,8 +145,8 @@ public class BungeeListener implements Listener {
      */
     private void updatePlayerCount() {
         botManager.updateGameName(
-                ProxyServer.getInstance().getOnlineCount(),
-                ProxyServer.getInstance().getConfig().getPlayerLimit()
+                server.getPlayerCount(),
+                server.getConfiguration().getShowMaxPlayers()
         );
     }
 }

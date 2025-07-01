@@ -1,23 +1,23 @@
 package work.novablog.mcplugin.discordconnect.command.bungee;
 
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.plugin.Command;
-import net.md_5.bungee.api.plugin.TabExecutor;
+import com.velocitypowered.api.command.CommandInvocation;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.novablog.mcplugin.discordconnect.util.Message;
+import work.novablog.mcplugin.discordconnect.util.TextUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * 複数のサブコマンドを持つコマンド
  * 引数が指定されていない場合はdefaultCommandを実行する
  */
-public class CompositeCommand extends Command implements TabExecutor {
+public class CompositeCommand extends Command implements SimpleCommand {
     private final HashMap<String, Command> subCommands;
     private Command defaultCommand;
 
@@ -36,7 +36,7 @@ public class CompositeCommand extends Command implements TabExecutor {
 
     /**
      * サブコマンドを追加する
-     * 実行権限は{@link Command#hasPermission(CommandSender)}で判定される
+     * 実行権限は{@link SimpleCommand#hasPermission(CommandInvocation)}で判定される
      *
      * @param subCommands 追加するサブコマンド
      */
@@ -61,15 +61,19 @@ public class CompositeCommand extends Command implements TabExecutor {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
+    public void execute(Invocation invocation) {
+        execute(invocation.source(), invocation.arguments());
+    }
+
+    public void execute(CommandSource sender, String[] args) {
         Command command = args.length == 0 ? defaultCommand : subCommands.get(args[0]);
         if (command == null) {
-            sender.sendMessage(TextComponent.fromLegacyText(Message.bungeeCommandNotFound.toString()));
+            sender.sendMessage(TextUtil.LEGACY_SERIALIZER.deserialize(Message.bungeeCommandNotFound.toString()));
             return;
         }
 
         if (!command.hasPermission(sender)) {
-            sender.sendMessage(TextComponent.fromLegacyText(Message.bungeeCommandDenied.toString()));
+            sender.sendMessage(TextUtil.LEGACY_SERIALIZER.deserialize(Message.bungeeCommandDenied.toString()));
             return;
         }
 
@@ -77,24 +81,34 @@ public class CompositeCommand extends Command implements TabExecutor {
     }
 
     @Override
-    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
-        Command subCommand = subCommands.get(args[0].toLowerCase());
+    public List<String> suggest(Invocation invocation) {
+        return onTabComplete(invocation.source(), invocation.arguments());
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSource sender, String[] args) {
+        String arg = args.length == 0 ? "" : args[0].toLowerCase();
+        Command subCommand = subCommands.get(arg);
         if (subCommand != null) {
-            if (subCommand instanceof TabExecutor) {
-                return ((TabExecutor) subCommand).onTabComplete(
-                        sender, Arrays.copyOfRange(args, 1, args.length)
-                );
-            } else {
-                return Collections.emptyList();
-            }
+            return subCommand.onTabComplete(sender, Arrays.copyOfRange(args, 1, args.length));
         }
 
         ArrayList<String> suggestions = new ArrayList<>();
         for (String alias : subCommands.keySet()) {
-            if (alias.startsWith(args[0].toLowerCase())) {
+            if (alias.startsWith(arg)) {
                 suggestions.add(alias);
             }
         }
         return suggestions;
+    }
+
+    @Override
+    public boolean hasPermission(Invocation invocation) {
+        return hasPermission(invocation.source());
+    }
+
+    @Override
+    public String[] getAliases() {
+        return super.getAliases();
     }
 }

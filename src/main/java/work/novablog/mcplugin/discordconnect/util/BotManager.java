@@ -1,5 +1,6 @@
 package work.novablog.mcplugin.discordconnect.util;
 
+import com.velocitypowered.api.proxy.ProxyServer;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -11,21 +12,20 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.exceptions.InvalidTokenException;
 import net.dv8tion.jda.api.hooks.EventListener;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.md_5.bungee.api.ProxyServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import work.novablog.mcplugin.discordconnect.listener.DiscordListener;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * DiscordBotの管理を行う
  */
 public class BotManager implements EventListener {
+    private final @NotNull ProxyServer server;
     private final Logger logger;
     private JDA bot;
     private final List<Long> chatChannelIds;
@@ -35,22 +35,24 @@ public class BotManager implements EventListener {
     private boolean isActive;
 
     public BotManager(
+            @NotNull ProxyServer server,
             @NotNull Logger logger,
             @NotNull String token,
             @NotNull List<Long> chatChannelIds,
             @NotNull String playingGameName,
             @NotNull String toMinecraftFormat
     ) {
+        this.server = server;
         this.logger = logger;
 
         //ログインする
         try {
             bot = JDABuilder.createLight(token, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
-                    .addEventListeners(this, new DiscordListener(chatChannelIds, toMinecraftFormat))
+                    .addEventListeners(this, new DiscordListener(server, chatChannelIds, toMinecraftFormat))
                     .build();
             isActive = true;
         } catch (InvalidTokenException e) {
-            this.logger.severe(Message.invalidToken.toString());
+            this.logger.error(Message.invalidToken.toString());
             bot = null;
             isActive = false;
         }
@@ -91,7 +93,7 @@ public class BotManager implements EventListener {
             try {
                 sender.join();
             } catch (InterruptedException e) {
-                logger.log(Level.SEVERE, "Exception", e);
+                logger.error("Exception", e);
             }
         });
 
@@ -113,7 +115,7 @@ public class BotManager implements EventListener {
                 TextChannel channel = bot.getTextChannelById(id);
 
                 if (channel == null) {
-                    logger.warning(Message.channelNotFound.toString().replace("{id}", String.valueOf(id)));
+                    logger.warn(Message.channelNotFound.toString().replace("{id}", String.valueOf(id)));
                     continue;
                 }
 
@@ -123,8 +125,8 @@ public class BotManager implements EventListener {
             }
 
             updateGameName(
-                    ProxyServer.getInstance().getPlayers().size(),
-                    ProxyServer.getInstance().getConfig().getPlayerLimit()
+                    server.getPlayerCount(),
+                    server.getConfiguration().getShowMaxPlayers()
             );
 
             logger.info(Message.botIsReady.toString());

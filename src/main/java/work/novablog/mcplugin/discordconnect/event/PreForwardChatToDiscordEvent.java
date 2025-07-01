@@ -1,20 +1,18 @@
 package work.novablog.mcplugin.discordconnect.event;
 
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.ChatEvent;
-import net.md_5.bungee.api.plugin.Cancellable;
-import net.md_5.bungee.api.plugin.Event;
+import com.velocitypowered.api.event.player.PlayerChatEvent;
+import com.velocitypowered.api.proxy.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Discordにチャットを転送する前に実行されるイベント
  * cancelするとDiscordConnectによる転送をキャンセルできる
  */
-public class PreForwardChatToDiscordEvent extends Event implements Cancellable {
-    private final ChatEvent event;
+public class PreForwardChatToDiscordEvent {
+    private final PlayerChatEvent event;
     private boolean cancelled;
 
-    public PreForwardChatToDiscordEvent(@NotNull ChatEvent event) {
+    public PreForwardChatToDiscordEvent(@NotNull PlayerChatEvent event) {
         this.event = event;
         cancelled = false;
     }
@@ -24,8 +22,8 @@ public class PreForwardChatToDiscordEvent extends Event implements Cancellable {
      *
      * @return 送信者
      */
-    public ProxiedPlayer getSender() {
-        return (ProxiedPlayer) event.getSender();
+    public Player getSender() {
+        return event.getPlayer();
     }
 
     /**
@@ -37,12 +35,10 @@ public class PreForwardChatToDiscordEvent extends Event implements Cancellable {
         return event.getMessage();
     }
 
-    @Override
     public boolean isCancelled() {
         return cancelled;
     }
 
-    @Override
     public void setCancelled(boolean cancel) {
         this.cancelled = cancel;
     }

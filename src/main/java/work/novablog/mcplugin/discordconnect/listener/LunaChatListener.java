@@ -1,16 +1,14 @@
 package work.novablog.mcplugin.discordconnect.listener;
 
-import com.github.ucchyocean.lc3.bungee.event.LunaChatBungeeChannelMessageEvent;
+import com.github.ucchyocean.lc.velocity.event.LunaChatVelocityChannelMessageEvent;
 import com.gmail.necnionch.myapp.markdownconverter.MarkComponent;
 import com.gmail.necnionch.myapp.markdownconverter.MarkdownConverter;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.event.EventHandler;
-import net.md_5.bungee.event.EventPriority;
+import com.velocitypowered.api.event.Subscribe;
 import org.jetbrains.annotations.NotNull;
 import work.novablog.mcplugin.discordconnect.event.PreForwardChatToDiscordEvent;
 import work.novablog.mcplugin.discordconnect.util.BotManager;
 
-public class LunaChatListener implements Listener {
+public class LunaChatListener {
     private final BotManager botManager;
     private final String toDiscordFormat;
 
@@ -19,14 +17,14 @@ public class LunaChatListener implements Listener {
         this.toDiscordFormat = toDiscordFormat;
     }
 
-    @EventHandler
+    @Subscribe
     public void onPreForwardChatToDiscord(PreForwardChatToDiscordEvent event) {
         // BungeeListener#onPreForwardChatToDiscordによって二重に送信されるのを抑制
         event.setCancelled(true);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onLunaChatMessage(LunaChatBungeeChannelMessageEvent event) {
+    @Subscribe  // HIGHEST?
+    public void onLunaChatMessage(LunaChatVelocityChannelMessageEvent event) {
         if (!event.getChannel().isGlobalChannel()) return;
 
         MarkComponent[] components = MarkdownConverter.fromMinecraftMessage(event.getMessage(), '§');
